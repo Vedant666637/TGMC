@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">TGM-C</string>
+    <string name="accessibility_service_label">TGM-C Guardian Monitor</string>
+    <string name="accessibility_service_description">TGM-C uses accessibility services to monitor app usage on this child device, as part of the parental supervision setup. This service is only active when this device has been paired to a parent account.</string>
+    <string name="monitoring_notification_title">TGM-C Monitoring Active</string>
+    <string name="monitoring_notification_text">Parental monitoring is running on this device</string>
+    <string name="camera_active_notification">Camera is being accessed by your parent</string>
+    <string name="mic_active_notification">Microphone is active — your parent is listening</string>
+    <string name="screen_active_notification">Screen is being mirrored to your parent</string>
+    <string name="channel_monitoring_name">Monitoring Service</string>
+    <string name="channel_monitoring_desc">Required persistent notification while monitoring is active</string>
+    <string name="channel_alerts_name">Parental Alerts</string>
+    <string name="channel_alerts_desc">Alerts for parental activity such as geofence, SOS, and app installs</string>
+    <string name="channel_sos_name">SOS Emergency</string>
+    <string name="channel_sos_desc">Emergency SOS alerts from child device</string>
+</resources>

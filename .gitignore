@@ -1,0 +1,41 @@
+# ── Android / Gradle ──────────────────────────────
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+app/build/
+
+# ── Firebase (contains API keys — NEVER commit) ──
+google-services.json
+app/google-services.json
+*-firebase-adminsdk-*.json
+
+# ── Backend Secrets ───────────────────────────────
+backend/.env
+backend/dist/
+backend/node_modules/
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/uploads/
+
+# ── Admin Dashboard ──────────────────────────────
+admin-dashboard/node_modules/
+admin-dashboard/dist/
+
+# ── General ──────────────────────────────────────
+node_modules/
+*.log
+.env
+.env.local
+.env.*.local

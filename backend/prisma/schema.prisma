@@ -1,0 +1,211 @@
+// This is your Prisma schema file for TGM-C backend
+// Run: npx prisma generate && npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"  // Change to "postgresql" for production
+  url      = env("DATABASE_URL")
+}
+
+// ── Admins ────────────────────────────────────────────────────────
+model Admin {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String?
+  mfaEnabled   Boolean  @default(false)
+  mfaSecret    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  auditLogs    AdminAuditLog[]
+  content      EducationalContent[]
+  storeItems   StoreItem[]
+}
+
+// ── Parent Accounts ───────────────────────────────────────────────
+model Parent {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String
+  displayName    String?
+  subscriptionPlan String  @default("free")
+  subscriptionStatus String @default("trial")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  refreshTokens  RefreshToken[]
+  devices        ChildDevice[]
+}
+
+// ── Refresh Tokens ────────────────────────────────────────────────
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  parentId  String
+  parent    Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ── Pairing Codes ─────────────────────────────────────────────────
+model PairingCode {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  parentId  String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ── Child Devices ─────────────────────────────────────────────────
+model ChildDevice {
+  id           String    @id @default(uuid())
+  parentId     String
+  parent       Parent    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  childName    String    @default("Child")
+  deviceModel  String
+  fcmToken     String?   // Firebase push token
+  isOnline     Boolean   @default(false)
+  lastSeenAt   DateTime?
+  batteryLevel Int       @default(100)
+  pairedAt     DateTime  @default(now())
+  blockRules   AppBlockRule[]
+  schedules    TimeSchedule[]
+  locations    LocationPing[]
+  geofences    Geofence[]
+  alerts       Alert[]
+  webFilters   WebFilterRule[]
+  messages     MessageLog[]
+}
+
+// ── App Block Rules ───────────────────────────────────────────────
+model AppBlockRule {
+  id          String      @id @default(uuid())
+  deviceId    String
+  device      ChildDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  packageName String
+  appName     String
+  category    String      @default("OTHER")
+  isBlocked   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+
+  @@unique([deviceId, packageName])
+}
+
+// ── Time Schedules ────────────────────────────────────────────────
+model TimeSchedule {
+  id         String      @id @default(uuid())
+  deviceId   String
+  device     ChildDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  name       String
+  startHour  Int
+  startMinute Int
+  endHour    Int
+  endMinute  Int
+  activeDays String      // JSON array of day numbers [0..6]
+  isEnabled  Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+}
+
+// ── Location Pings ────────────────────────────────────────────────
+model LocationPing {
+  id        String      @id @default(uuid())
+  deviceId  String
+  device    ChildDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  latitude  Float
+  longitude Float
+  accuracy  Float
+  address   String?
+  createdAt DateTime    @default(now())
+}
+
+// ── Geofences ─────────────────────────────────────────────────────
+model Geofence {
+  id            String      @id @default(uuid())
+  deviceId      String
+  device        ChildDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  name          String
+  latitude      Float
+  longitude     Float
+  radiusMeters  Float
+  alertOnEnter  Boolean     @default(true)
+  alertOnExit   Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+}
+
+// ── Alerts ────────────────────────────────────────────────────────
+model Alert {
+  id        String      @id @default(uuid())
+  deviceId  String
+  device    ChildDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  type      String      // AlertType enum value
+  title     String
+  message   String
+  isRead    Boolean     @default(false)
+  createdAt DateTime    @default(now())
+}
+
+// ── Admin Audit Log ───────────────────────────────────────────────
+model AdminAuditLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  admin     Admin    @relation(fields: [adminId], references: [id])
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+// ── Web Filter Rules ─────────────────────────────────────────────
+model WebFilterRule {
+  id          String      @id @default(uuid())
+  deviceId    String
+  device      ChildDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  ruleType    String      // "DOMAIN" | "KEYWORD" | "CATEGORY"
+  value       String      // e.g. "pornhub.com", "gambling", "ADULT"
+  isBlocked   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+
+  @@unique([deviceId, ruleType, value])
+}
+
+// ── Educational Content (Phase 6) ─────────────────────────────────
+model EducationalContent {
+  id           String    @id @default(uuid())
+  type         String    // "STATUS", "POST", "REEL", "VIDEO"
+  title        String
+  url          String    // Media URL (S3, CDN, etc)
+  thumbnailUrl String?   // Preview image for videos/reels
+  description  String?
+  category     String    @default("GENERAL") // "MATH", "SCIENCE", "LANGUAGE", "SAFETY", "GENERAL"
+  durationSecs Int?      // Duration for VIDEO/REEL
+  expiresAt    DateTime? // For STATUS type (24h expiry like WhatsApp)
+  publishedAt  DateTime  @default(now())
+  adminId      String
+  admin        Admin     @relation(fields: [adminId], references: [id])
+}
+
+// ── Shopping Store Items (Phase 6) ────────────────────────────────
+model StoreItem {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  imageUrl    String
+  adminId     String
+  admin       Admin    @relation(fields: [adminId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// ── Message & Notification Logs (Phase 7) ─────────────────────────
+model MessageLog {
+  id         String      @id @default(uuid())
+  deviceId   String
+  device     ChildDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  appName    String      // e.g. "WhatsApp", "Messages", "Instagram"
+  sender     String      // e.g. "Mom", "+1234567890"
+  content    String      // The message text
+  isIncoming Boolean     @default(true)
+  timestamp  DateTime    @default(now())
+}
