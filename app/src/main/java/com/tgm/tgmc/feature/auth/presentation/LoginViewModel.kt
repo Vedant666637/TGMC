@@ -68,4 +68,24 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
+
+    fun loginWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            when (val result = authRepository.googleLogin(idToken)) {
+                is Result.Success -> {
+                    val token = result.data
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, userRole = token.role) }
+                }
+                is Result.Error -> {
+                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                }
+                is Result.Loading -> { }
+            }
+        }
+    }
+
+    fun setAuthError(message: String) {
+        _uiState.update { it.copy(error = message) }
+    }
 }

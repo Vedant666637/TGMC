@@ -3,20 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --navy-900: #0A0E1A;
-  --navy-800: #0F1628;
-  --navy-700: #162040;
-  --cyan-400: #00E5FF;
-  --surface-800: #1C2536;
-  --surface-700: #232F45;
+  --clay-bg: #F0F4FD;
+  --clay-card: #F6F8FF;
+  --clay-primary: #7C3AED;
+  --clay-secondary: #06B6D4;
+  --clay-accent: #F43F5E;
+  --clay-text-title: #1E293B;
+  --clay-text-body: #64748B;
+  --clay-shadow-light: #FFFFFF;
+  --clay-shadow-dark: #D1D9E6;
 }
 
 * { box-sizing: border-box; }
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: var(--navy-900);
-  color: #F7FAFC;
+  background-color: var(--clay-bg);
+  color: var(--clay-text-body);
   margin: 0;
   -webkit-font-smoothing: antialiased;
 }
@@ -26,10 +29,58 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--surface-700); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--cyan-400); }
 
-.glass {
-  background: rgba(28, 37, 54, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 229, 255, 0.08);
+.clay-card {
+  background: var(--clay-card);
+  border-radius: 24px;
+  box-shadow: 
+    8px 8px 16px var(--clay-shadow-dark),
+    -8px -8px 16px var(--clay-shadow-light),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.8),
+    inset -4px -4px 8px rgba(209, 217, 230, 0.3);
+}
+
+.clay-btn {
+  background: var(--clay-primary);
+  border-radius: 16px;
+  box-shadow: 
+    6px 6px 12px var(--clay-shadow-dark),
+    -6px -6px 12px var(--clay-shadow-light),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.1);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.clay-btn:active {
+  box-shadow: 
+    inset 4px 4px 8px rgba(0, 0, 0, 0.2),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.2);
+}
+
+.clay-input {
+  background: var(--clay-card);
+  border-radius: 16px;
+  box-shadow: 
+    inset 4px 4px 8px var(--clay-shadow-dark),
+    inset -4px -4px 8px var(--clay-shadow-light);
+  border: none;
+  outline: none;
+}
+
+.clay-input:focus {
+  box-shadow: 
+    inset 6px 6px 12px var(--clay-shadow-dark),
+    inset -6px -6px 12px var(--clay-shadow-light);
+}
+
+.clay-icon-box {
+  background: var(--clay-card);
+  border-radius: 16px;
+  box-shadow: 
+    4px 4px 8px var(--clay-shadow-dark),
+    -4px -4px 8px var(--clay-shadow-light),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 4px rgba(209, 217, 230, 0.3);
 }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

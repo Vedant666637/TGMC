@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.tgm.tgmc" />
+                  <option name="mobileSdkAppId" value="1:451549885245:android:7364fa443d9f8c34704b54" />
+                  <option name="projectId" value="tgmc-361da" />
+                  <option name="projectNumber" value="451549885245" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

@@ -28,8 +28,8 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
-            buildConfigField("String", "BASE_URL", "\"http://192.168.182.83:3000\"")
-            buildConfigField("String", "WS_URL", "\"ws://192.168.182.83:3000\"")
+            buildConfigField("String", "BASE_URL", "\"https://tgmc.onrender.com\"")
+            buildConfigField("String", "WS_URL", "\"wss://tgmc.onrender.com\"")
         }
         release {
             isMinifyEnabled = true
@@ -140,13 +140,20 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.firestore)
 
+    // Google Sign In (Credential Manager)
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
     // WebRTC
     implementation(libs.webrtc.android)
 
-    // CameraX
+    // CameraX & QR Scanning
     implementation(libs.camerax.core)
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
+    implementation("com.google.guava:guava:31.1-android")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 
     // Testing
 

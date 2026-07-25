@@ -10,6 +10,10 @@ const deviceSocketMap = new Map<string, string>();
 // Map: parentId → socket.id (parent connections)
 const parentSocketMap = new Map<string, string>();
 
+export function getOnlineParentCount(): number {
+  return parentSocketMap.size;
+}
+
 export function initSocketServer(httpServer: HttpServer): void {
   io = new SocketServer(httpServer, {
     cors: {
@@ -32,7 +36,12 @@ export function initSocketServer(httpServer: HttpServer): void {
 
   io.on('connection', (socket: Socket) => {
     const user = (socket as any).user;
-    console.log(`[WS] Connected: ${user.email} (${socket.id})`);
+    console.log(`[WS] Connected: ${user.email} (${socket.id}) role: ${user.role}`);
+
+    // Track active parents
+    if (user.role === 'PARENT') {
+      parentSocketMap.set(user.userId, socket.id);
+    }
 
     // ── Child device joins ──────────────────────────────────────
     socket.on('device:join', async (data: { deviceId: string }) => {
@@ -148,6 +157,12 @@ export function initSocketServer(httpServer: HttpServer): void {
     // ── Disconnect ───────────────────────────────────────────────
     socket.on('disconnect', async () => {
       console.log(`[WS] Disconnected: ${user.email} (${socket.id})`);
+      
+      // Remove parent from active tracking
+      if (user.role === 'PARENT') {
+        parentSocketMap.delete(user.userId);
+      }
+
       // Mark device offline if this was a child connection
       for (const [deviceId, socketId] of deviceSocketMap.entries()) {
         if (socketId === socket.id) {

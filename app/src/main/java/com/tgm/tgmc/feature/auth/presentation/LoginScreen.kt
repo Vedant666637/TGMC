@@ -1,10 +1,13 @@
 package com.tgm.tgmc.feature.auth.presentation
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -14,18 +17,33 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.compose.ui.platform.LocalContext
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.tgm.tgmc.R
 import com.tgm.tgmc.core.domain.model.UserRole
 import com.tgm.tgmc.ui.theme.*
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: (UserRole) -> Unit,
@@ -43,180 +61,268 @@ fun LoginScreen(
         }
     }
 
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val credentialManager = remember { CredentialManager.create(context) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(Navy800, Navy900))
-            )
+            .background(ClayBackground)
     ) {
+        // Decorative 3D Orbs (Claymorphism hallmark)
+        Box(
+            modifier = Modifier
+                .offset(x = (-40).dp, y = (-40).dp)
+                .size(200.dp)
+                .clay(
+                    backgroundColor = ClayBackground,
+                    cornerRadius = 100.dp,
+                    elevation = 20.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 60.dp, y = 80.dp)
+                .size(250.dp)
+                .clay(
+                    backgroundColor = ClayBackground,
+                    cornerRadius = 125.dp,
+                    elevation = 30.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 28.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
-            // Header
+            // Logo Header
             Box(
                 modifier = Modifier
-                    .size(80.dp)
-                    .background(
-                        Brush.radialGradient(listOf(Cyan400, Indigo400)),
-                        RoundedCornerShape(20.dp)
+                    .size(100.dp)
+                    .clay(
+                        backgroundColor = ClayCard,
+                        cornerRadius = 35.dp,
+                        elevation = 16.dp,
+                        lightShadowColor = ClayShadowLight,
+                        darkShadowColor = ClayShadowDark
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Shield,
                     contentDescription = null,
-                    tint = Navy900,
-                    modifier = Modifier.size(40.dp)
+                    tint = ClayPrimary,
+                    modifier = Modifier.size(52.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Welcome back",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold
+                text = "Welcome Back",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = ClayTextTitle,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp
                 )
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Sign in to your TGM-C account",
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+                text = "Sign in to manage your family",
+                style = MaterialTheme.typography.bodyLarge.copy(color = ClayTextBody)
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            // Email field
-            OutlinedTextField(
+            // Professional Inset Email Field
+            ClayInputField(
                 value = uiState.email,
                 onValueChange = viewModel::onEmailChange,
-                label = { Text("Email address") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                singleLine = true,
-                isError = uiState.emailError != null,
-                supportingText = uiState.emailError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
-                modifier = Modifier.fillMaxWidth(),
-                colors = tgmcTextFieldColors(),
-                shape = RoundedCornerShape(12.dp)
+                hint = "Email Address",
+                icon = Icons.Default.Email,
+                error = uiState.emailError,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Password field
+            // Professional Inset Password Field
             var passwordVisible by remember { mutableStateOf(false) }
-            OutlinedTextField(
+            ClayInputField(
                 value = uiState.password,
                 onValueChange = viewModel::onPasswordChange,
-                label = { Text("Password") },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                hint = "Password",
+                icon = Icons.Default.Lock,
+                isPassword = !passwordVisible,
+                error = uiState.passwordError,
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                            contentDescription = null,
+                            tint = ClayTextBody
                         )
                     }
                 },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                        viewModel.login()
-                    }
-                ),
-                singleLine = true,
-                isError = uiState.passwordError != null,
-                supportingText = uiState.passwordError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
-                modifier = Modifier.fillMaxWidth(),
-                colors = tgmcTextFieldColors(),
-                shape = RoundedCornerShape(12.dp)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus()
+                    viewModel.login()
+                })
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Forgot password
             TextButton(
                 onClick = onForgotPassword,
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.align(Alignment.End),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text("Forgot password?", color = Cyan400, fontSize = 13.sp)
+                Text("Forgot password?", color = ClayPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Error banner
             AnimatedVisibility(visible = uiState.error != null) {
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(Icons.Default.Error, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = uiState.error ?: "",
                             color = MaterialTheme.colorScheme.onErrorContainer,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
                         )
                     }
                 }
             }
 
-            if (uiState.error != null) Spacer(modifier = Modifier.height(16.dp))
-
             // Login button
-            Button(
-                onClick = viewModel::login,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                enabled = !uiState.isLoading,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Cyan400,
-                    contentColor = Navy900
-                )
+                    .height(64.dp)
+                    .clay(
+                        backgroundColor = ClayPrimary,
+                        cornerRadius = 24.dp,
+                        elevation = 12.dp,
+                        lightShadowColor = ClayPrimary.copy(alpha = 0.6f),
+                        darkShadowColor = ClayShadowDark
+                    )
+                    .clip(RoundedCornerShape(24.dp))
+                    .clickable(enabled = !uiState.isLoading, onClick = viewModel::login),
+                contentAlignment = Alignment.Center
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = Navy900,
-                        strokeWidth = 2.dp
-                    )
+                    CircularProgressIndicator(modifier = Modifier.size(28.dp), color = ClayWhite, strokeWidth = 3.dp)
                 } else {
                     Text(
                         text = "Sign In",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = ClayWhite,
+                            fontSize = 20.sp,
+                            letterSpacing = 1.sp
                         )
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Google Login Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .clay(
+                        backgroundColor = ClayWhite,
+                        cornerRadius = 24.dp,
+                        elevation = 8.dp,
+                        lightShadowColor = ClayShadowLight,
+                        darkShadowColor = ClayShadowDark
+                    )
+                    .clip(RoundedCornerShape(24.dp))
+                    .clickable(onClick = {
+                        coroutineScope.launch {
+                            var activityContext: Context = context
+                            while (activityContext is ContextWrapper && activityContext !is Activity) {
+                                activityContext = activityContext.baseContext
+                            }
+
+                            val googleIdOption = GetGoogleIdOption.Builder()
+                                .setFilterByAuthorizedAccounts(false)
+                                .setServerClientId(context.getString(R.string.default_web_client_id))
+                                .setAutoSelectEnabled(false)
+                                .build()
+
+                            val request = GetCredentialRequest.Builder()
+                                .addCredentialOption(googleIdOption)
+                                .build()
+
+                            try {
+                                val result = credentialManager.getCredential(
+                                    request = request,
+                                    context = activityContext
+                                )
+                                val credential = result.credential
+                                if (credential is androidx.credentials.CustomCredential &&
+                                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                                ) {
+                                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                                    viewModel.loginWithGoogle(googleIdTokenCredential.idToken)
+                                }
+                            } catch (e: GetCredentialException) {
+                                e.printStackTrace()
+                                viewModel.setAuthError("Google Error: ${e.type} - ${e.message}")
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                viewModel.setAuthError(e.message ?: "An unknown error occurred.")
+                            }
+                        }
+                    }),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_google),
+                        contentDescription = "Google Logo",
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "Continue with Google",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = ClayTextTitle,
+                            fontSize = 18.sp
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
 
             // Sign Up Navigation
             Row(
@@ -224,83 +330,131 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Text("Don't have an account? ", style = MaterialTheme.typography.bodyMedium.copy(color = ClayTextBody))
                 Text(
-                    text = "Don't have an account? ",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+                    text = "Sign Up",
+                    modifier = Modifier
+                        .clickable(onClick = onNavigateToRegister)
+                        .padding(8.dp),
+                    color = ClayPrimary,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp
                 )
-                TextButton(
-                    onClick = onNavigateToRegister,
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(
-                        text = "Sign Up",
-                        color = Cyan400,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Child Mode Button
-            OutlinedButton(
-                onClick = onChildPairClick,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Cyan400
-                ),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Cyan400)
-            ) {
-                Icon(Icons.Default.ChildCare, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Setting up a child device?",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold
+                    .height(64.dp)
+                    .clay(
+                        backgroundColor = ClayCard,
+                        cornerRadius = 24.dp,
+                        elevation = 6.dp,
+                        lightShadowColor = ClayShadowLight,
+                        darkShadowColor = ClayShadowDark
                     )
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Platform notice
-            Surface(
-                color = Surface800,
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .clickable(onClick = onChildPairClick),
+                contentAlignment = Alignment.Center
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Android, contentDescription = null, tint = Cyan400, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.ChildCare, contentDescription = null, tint = ClaySecondary, modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "TGM-C is Android only. Monitoring features require both devices to be Android.",
-                        style = MaterialTheme.typography.labelSmall.copy(color = TextMuted)
+                        text = "Setting up a child device?",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = ClaySecondary,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }
+            
+            Spacer(modifier = Modifier.height(48.dp))
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(40.dp))
+@Composable
+fun ClayInputField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    icon: ImageVector,
+    isPassword: Boolean = false,
+    error: String? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+) {
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .insetClay(
+                    backgroundColor = ClayCard,
+                    cornerRadius = 24.dp,
+                    elevation = 8.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                ),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(icon, contentDescription = null, tint = ClayPrimary, modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.width(16.dp))
+                BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = ClayTextTitle, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
+                    keyboardOptions = keyboardOptions,
+                    keyboardActions = keyboardActions,
+                    visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+                    cursorBrush = SolidColor(ClayPrimary),
+                    decorationBox = { innerTextField ->
+                        if (value.isEmpty()) {
+                            Text(hint, style = MaterialTheme.typography.bodyLarge.copy(color = ClayTextBody, fontSize = 16.sp))
+                        }
+                        innerTextField()
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                if (trailingIcon != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    trailingIcon()
+                }
+            }
+        }
+        if (error != null) {
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(start = 24.dp, top = 8.dp)
+            )
         }
     }
 }
 
 @Composable
 fun tgmcTextFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = Cyan400,
-    unfocusedBorderColor = Surface600,
-    focusedLabelColor = Cyan400,
-    unfocusedLabelColor = TextMuted,
-    cursorColor = Cyan400,
-    focusedLeadingIconColor = Cyan400,
-    unfocusedLeadingIconColor = TextMuted,
-    focusedTextColor = TextPrimary,
-    unfocusedTextColor = TextSecondary,
-    focusedContainerColor = Surface800,
-    unfocusedContainerColor = Surface800
+    focusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+    unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+    focusedLabelColor = ClayPrimary,
+    unfocusedLabelColor = ClayTextBody,
+    cursorColor = ClayPrimary,
+    focusedLeadingIconColor = ClayPrimary,
+    unfocusedLeadingIconColor = ClayTextBody,
+    focusedTextColor = ClayTextTitle,
+    unfocusedTextColor = ClayTextBody,
+    focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+    unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
 )

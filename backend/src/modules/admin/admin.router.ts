@@ -5,6 +5,7 @@ import { generateAccessToken } from '../../config/jwt';
 import { authMiddleware, adminOnlyMiddleware, AuthRequest } from '../../middleware/authMiddleware';
 import { uploadMiddleware } from '../../middleware/uploadMiddleware';
 import path from 'path';
+import { getOnlineParentCount } from '../../socket/socketServer';
 export const adminRouter = Router();
 
 // POST /api/admin/login
@@ -34,6 +35,7 @@ adminRouter.get('/stats', async (_req: AuthRequest, res: Response) => {
     totalParents: parentCount,
     totalDevices: deviceCount,
     onlineDevices,
+    onlineParents: getOnlineParentCount(),
     totalAlerts: alertCount,
     generatedAt: new Date().toISOString()
   });

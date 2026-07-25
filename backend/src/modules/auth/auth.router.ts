@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '../../config/database';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../config/jwt';
 import { v4 as uuidv4 } from 'uuid';
+import { getAuth } from '../../config/firebase';
 
 export const authRouter = Router();
 
@@ -75,6 +76,56 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       return;
     }
     throw err;
+  }
+});
+
+// POST /api/auth/google
+authRouter.post('/google', async (req: Request, res: Response) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    res.status(400).json({ error: 'ID token required' });
+    return;
+  }
+
+  const auth = getAuth();
+  if (!auth) {
+    res.status(500).json({ error: 'Firebase Auth is not initialized on the server.' });
+    return;
+  }
+
+  try {
+    const decodedToken = await auth.verifyIdToken(idToken);
+    const email = decodedToken.email;
+    const displayName = decodedToken.name || '';
+
+    if (!email) {
+      res.status(400).json({ error: 'No email found in Google token' });
+      return;
+    }
+
+    let parent = await prisma.parent.findUnique({ where: { email } });
+    
+    // Auto-register if not exists
+    if (!parent) {
+      const passwordHash = await bcrypt.hash(uuidv4(), 12); // random unused password
+      parent = await prisma.parent.create({
+        data: { email, passwordHash, displayName }
+      });
+    }
+
+    const accessToken  = generateAccessToken({ userId: parent.id, email: parent.email, role: 'PARENT' });
+    const refreshToken = generateRefreshToken(parent.id);
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        parentId: parent.id,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }
+    });
+    res.json({ accessToken, refreshToken, role: 'PARENT', userId: parent.id, email: parent.email });
+  } catch (err: any) {
+    console.error('Google Auth Error:', err);
+    res.status(401).json({ error: 'Invalid Google ID token' });
   }
 });
 

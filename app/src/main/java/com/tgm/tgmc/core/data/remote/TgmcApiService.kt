@@ -12,6 +12,7 @@ import retrofit2.http.*
 
 // ── Request/Response DTOs ─────────────────────────────────────────
 data class LoginRequest(val email: String, val password: String)
+data class GoogleLoginRequest(val idToken: String)
 data class RegisterRequest(val email: String, val password: String, val displayName: String)
 data class ForgotPasswordRequest(val email: String)
 data class RefreshRequest(val refreshToken: String)
@@ -47,6 +48,9 @@ interface TgmcApiService {
     // Auth
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthToken>
+
+    @POST("api/auth/google")
+    suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<AuthToken>
 
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthToken>

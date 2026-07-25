@@ -13,8 +13,8 @@ import com.tgm.tgmc.core.domain.model.UserRole
 import com.tgm.tgmc.feature.auth.presentation.ForgotPasswordScreen
 import com.tgm.tgmc.feature.auth.presentation.LoginScreen
 import com.tgm.tgmc.feature.auth.presentation.RegisterScreen
+import com.tgm.tgmc.feature.auth.presentation.RoleSelectionScreen
 import com.tgm.tgmc.feature.child.presentation.ChildConsentScreen
-import com.tgm.tgmc.feature.child.presentation.ChildMainScreen
 import com.tgm.tgmc.feature.child.presentation.ChildPairScreen
 import com.tgm.tgmc.feature.parent.alerts.AlertsScreen
 import com.tgm.tgmc.feature.parent.appblock.AppBlockScreen
@@ -68,10 +68,9 @@ fun TgmcNavHost(
         ) {
             composable(TgmcRoutes.Auth.LOGIN) {
                 LoginScreen(
-                    onLoginSuccess = { role ->
-                        val target = if (role == UserRole.PARENT) PARENT_GRAPH else CHILD_GRAPH
-                        navController.navigate(target) {
-                            popUpTo(AUTH_GRAPH) { inclusive = true }
+                    onLoginSuccess = { _ ->
+                        navController.navigate(TgmcRoutes.Auth.ROLE_SELECTION) {
+                            popUpTo(TgmcRoutes.Auth.LOGIN) { inclusive = true }
                         }
                     },
                     onForgotPassword = {
@@ -90,10 +89,9 @@ fun TgmcNavHost(
 
             composable(TgmcRoutes.Auth.REGISTER) {
                 RegisterScreen(
-                    onRegisterSuccess = { role ->
-                        val target = if (role == UserRole.PARENT) PARENT_GRAPH else CHILD_GRAPH
-                        navController.navigate(target) {
-                            popUpTo(AUTH_GRAPH) { inclusive = true }
+                    onRegisterSuccess = { _ ->
+                        navController.navigate(TgmcRoutes.Auth.ROLE_SELECTION) {
+                            popUpTo(TgmcRoutes.Auth.REGISTER) { inclusive = true }
                         }
                     },
                     onNavigateToLogin = {
@@ -109,19 +107,41 @@ fun TgmcNavHost(
                     onBack = { navController.popBackStack() }
                 )
             }
+
+            composable(TgmcRoutes.Auth.ROLE_SELECTION) {
+                RoleSelectionScreen(
+                    onRoleSelected = { role ->
+                        val target = if (role == UserRole.PARENT) PARENT_GRAPH else CHILD_GRAPH
+                        navController.navigate(target) {
+                            popUpTo(AUTH_GRAPH) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
 
         // ── Parent Graph ─────────────────────────────────────────
         navigation(
             route = PARENT_GRAPH,
-            startDestination = TgmcRoutes.Parent.DASHBOARD
+            startDestination = TgmcRoutes.Parent.MAIN_LAYOUT
         ) {
-            composable(TgmcRoutes.Parent.DASHBOARD) {
-                ParentDashboardScreen(
-                    onNavigateTo = { route -> navController.navigate(route) },
+            composable(TgmcRoutes.Parent.MAIN_LAYOUT) {
+                val alertViewModel: com.tgm.tgmc.feature.shared.AlertViewModel = hiltViewModel()
+                val parentViewModel: com.tgm.tgmc.feature.parent.dashboard.ParentDashboardViewModel = hiltViewModel()
+                val uiState by parentViewModel.uiState.collectAsStateWithLifecycle()
+
+                com.tgm.tgmc.feature.parent.presentation.ParentMainLayout(
+                    onNavigateToGlobal = { route -> navController.navigate(route) },
                     onLogout = {
                         navController.navigate(AUTH_GRAPH) {
                             popUpTo(PARENT_GRAPH) { inclusive = true }
+                        }
+                    },
+                    onSendAlert = {
+                        // Trigger SOS alarm to the currently selected child
+                        val deviceId = uiState.selectedDevice?.deviceId
+                        if (deviceId != null) {
+                            alertViewModel.triggerAlertOnChild(deviceId)
                         }
                     }
                 )
@@ -188,13 +208,20 @@ fun TgmcNavHost(
             }
             composable(TgmcRoutes.Child.CONSENT) {
                 ChildConsentScreen(
-                    onAccepted = { navController.navigate(TgmcRoutes.Child.MAIN) {
+                    onAccepted = { navController.navigate(TgmcRoutes.Child.MAIN_LAYOUT) {
                         popUpTo(TgmcRoutes.Child.CONSENT) { inclusive = true }
                     }}
                 )
             }
-            composable(TgmcRoutes.Child.MAIN) {
-                ChildMainScreen()
+            composable(TgmcRoutes.Child.MAIN_LAYOUT) {
+                val alertViewModel: com.tgm.tgmc.feature.shared.AlertViewModel = hiltViewModel()
+                
+                com.tgm.tgmc.feature.child.presentation.ChildMainLayout(
+                    onSendAlert = {
+                        // Trigger SOS alert to the parent
+                        alertViewModel.triggerSosToParent()
+                    }
+                )
             }
         }
     }

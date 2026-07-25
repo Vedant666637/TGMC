@@ -2,6 +2,7 @@ package com.tgm.tgmc.core.data.repository
 
 import com.tgm.tgmc.core.data.local.TgmcDataStore
 import com.tgm.tgmc.core.data.remote.LoginRequest
+import com.tgm.tgmc.core.data.remote.GoogleLoginRequest
 import com.tgm.tgmc.core.data.remote.RegisterRequest
 import com.tgm.tgmc.core.data.remote.ForgotPasswordRequest
 import com.tgm.tgmc.core.data.remote.TgmcApiService
@@ -40,6 +41,27 @@ class AuthRepositoryImpl @Inject constructor(
                     else -> "Login failed (code $code)"
                 }
                 Result.Error(msg, code)
+            }
+        } catch (e: Exception) {
+            Result.Error("Connection Error: ${e.message}")
+        }
+    }
+
+    override suspend fun googleLogin(idToken: String): Result<AuthToken> {
+        return try {
+            val response = api.googleLogin(GoogleLoginRequest(idToken))
+            if (response.isSuccessful && response.body() != null) {
+                val token = response.body()!!
+                dataStore.saveAuthTokens(
+                    accessToken  = token.accessToken,
+                    refreshToken = token.refreshToken,
+                    role         = token.role,
+                    userId       = token.userId,
+                    email        = token.email
+                )
+                Result.Success(token)
+            } else {
+                Result.Error("Google Login failed (code ${response.code()})", response.code())
             }
         } catch (e: Exception) {
             Result.Error("Connection Error: ${e.message}")

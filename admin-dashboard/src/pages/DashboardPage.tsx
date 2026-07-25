@@ -7,6 +7,7 @@ interface Stats {
   totalParents: number;
   totalDevices: number;
   onlineDevices: number;
+  onlineParents: number;
   totalAlerts: number;
 }
 
@@ -48,10 +49,11 @@ export function DashboardPage() {
       </div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <KpiCard label="Total Parents" value={isLoading ? '—' : stats?.totalParents ?? 0} icon={Users} accent="#00E5FF" />
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+        <KpiCard label="Total Users" value={isLoading ? '—' : stats?.totalParents ?? 0} icon={Users} accent="#00E5FF" sub="Registered accounts" />
         <KpiCard label="Total Devices" value={isLoading ? '—' : stats?.totalDevices ?? 0} icon={Smartphone} accent="#6C63FF" />
-        <KpiCard label="Online Now" value={isLoading ? '—' : stats?.onlineDevices ?? 0} icon={Wifi} accent="#00D68F" sub="Active child devices" />
+        <KpiCard label="Online Users" value={isLoading ? '—' : stats?.onlineParents ?? 0} icon={Users} accent="#FF4D6D" sub="Active logged-in apps" />
+        <KpiCard label="Online Devices" value={isLoading ? '—' : stats?.onlineDevices ?? 0} icon={Wifi} accent="#00D68F" sub="Active child devices" />
         <KpiCard label="Total Alerts" value={isLoading ? '—' : stats?.totalAlerts ?? 0} icon={Bell} accent="#FFB347" />
       </div>
 

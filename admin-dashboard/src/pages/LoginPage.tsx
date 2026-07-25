@@ -29,22 +29,22 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[var(--clay-bg)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-br from-[#00E5FF] to-[#6C63FF] items-center justify-center mb-4">
-            <Shield className="w-8 h-8 text-[#0A0E1A]" />
+          <div className="inline-flex w-16 h-16 rounded-2xl clay-icon-box items-center justify-center mb-4 text-[var(--clay-primary)]">
+            <Shield className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold text-white">TGM-C Admin</h1>
-          <p className="text-sm text-[#718096] mt-1">Internal console — authorized staff only</p>
+          <h1 className="text-2xl font-bold text-[var(--clay-text-title)]">TGM-C Admin</h1>
+          <p className="text-sm text-[var(--clay-text-body)] mt-1">Internal console — authorized staff only</p>
         </div>
 
         {/* Card */}
-        <div className="glass rounded-2xl p-8">
+        <div className="clay-card p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-medium text-[#CBD5E0] mb-1.5">Email Address</label>
+              <label className="block text-xs font-medium text-[var(--clay-text-title)] mb-1.5">Email Address</label>
               <input
                 id="admin-email"
                 type="email"
@@ -52,13 +52,13 @@ export function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-[#0A0E1A] border border-[#2D3C56] text-white text-sm placeholder-[#4A5568] focus:outline-none focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF]/30 transition-colors"
+                className="w-full px-4 py-3 clay-input text-[var(--clay-text-title)] placeholder-[var(--clay-text-body)] focus:ring-1 focus:ring-[var(--clay-primary)]/30 transition-colors"
                 placeholder="admin@tgmc.app"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#CBD5E0] mb-1.5">Password</label>
+              <label className="block text-xs font-medium text-[var(--clay-text-title)] mb-1.5">Password</label>
               <div className="relative">
                 <input
                   id="admin-password"
@@ -67,13 +67,13 @@ export function LoginPage() {
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-10 rounded-xl bg-[#0A0E1A] border border-[#2D3C56] text-white text-sm placeholder-[#4A5568] focus:outline-none focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF]/30 transition-colors"
+                  className="w-full px-4 py-3 pr-10 clay-input text-[var(--clay-text-title)] placeholder-[var(--clay-text-body)] focus:ring-1 focus:ring-[var(--clay-primary)]/30 transition-colors"
                   placeholder="••••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A5568] hover:text-[#00E5FF] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--clay-text-body)] hover:text-[var(--clay-primary)] transition-colors"
                 >
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -81,7 +81,7 @@ export function LoginPage() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-[#FF4D6D]/10 border border-[#FF4D6D]/20 text-[#FF4D6D] text-sm">
+              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-[var(--clay-accent)]/10 text-[var(--clay-accent)] text-sm font-semibold">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
               </div>
@@ -91,11 +91,11 @@ export function LoginPage() {
               id="admin-login-btn"
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-[#00E5FF] text-[#0A0E1A] font-bold text-sm hover:bg-[#40EEFF] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-150"
+              className="w-full py-3 clay-btn font-bold text-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-[#0A0E1A]/30 border-t-[#0A0E1A] rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Signing In…
                 </span>
               ) : 'Sign In'}
@@ -103,7 +103,7 @@ export function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-[#4A5568] mt-6">
+        <p className="text-center text-xs text-[var(--clay-text-body)] mt-6 font-medium">
           This dashboard is for internal TGM-C staff only.
         </p>
       </div>

@@ -1,7 +1,9 @@
 package com.tgm.tgmc.feature.auth.presentation
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,9 +46,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(Navy800, Navy900))
-            )
+            .background(ClayBackground)
     ) {
         Column(
             modifier = Modifier
@@ -60,18 +60,21 @@ fun RegisterScreen(
             // Header
             Box(
                 modifier = Modifier
-                    .size(80.dp)
-                    .background(
-                        Brush.radialGradient(listOf(Cyan400, Indigo400)),
-                        RoundedCornerShape(20.dp)
+                    .size(96.dp)
+                    .clay(
+                        backgroundColor = ClayCard,
+                        cornerRadius = 32.dp,
+                        elevation = 12.dp,
+                        lightShadowColor = ClayShadowLight,
+                        darkShadowColor = ClayShadowDark
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.PersonAdd,
                     contentDescription = null,
-                    tint = Navy900,
-                    modifier = Modifier.size(40.dp)
+                    tint = ClayPrimary,
+                    modifier = Modifier.size(48.dp)
                 )
             }
 
@@ -80,117 +83,157 @@ fun RegisterScreen(
             Text(
                 text = "Create Account",
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = TextPrimary,
+                    color = ClayTextTitle,
                     fontWeight = FontWeight.Bold
                 )
             )
             Text(
                 text = "Join TGM-C Guardian Control",
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+                style = MaterialTheme.typography.bodyMedium.copy(color = ClayTextBody)
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
             // Name field
-            OutlinedTextField(
-                value = uiState.displayName,
-                onValueChange = viewModel::onDisplayNameChange,
-                label = { Text("Parent Name (Optional)") },
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                colors = tgmcTextFieldColors(),
-                shape = RoundedCornerShape(12.dp)
-            )
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .clay(
+                    backgroundColor = ClayCard,
+                    cornerRadius = 20.dp,
+                    elevation = 6.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )) {
+                OutlinedTextField(
+                    value = uiState.displayName,
+                    onValueChange = viewModel::onDisplayNameChange,
+                    label = { Text("Parent Name (Optional)") },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = tgmcTextFieldColors(),
+                    shape = RoundedCornerShape(16.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Email field
-            OutlinedTextField(
-                value = uiState.email,
-                onValueChange = viewModel::onEmailChange,
-                label = { Text("Email address") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                singleLine = true,
-                isError = uiState.emailError != null,
-                supportingText = uiState.emailError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
-                modifier = Modifier.fillMaxWidth(),
-                colors = tgmcTextFieldColors(),
-                shape = RoundedCornerShape(12.dp)
-            )
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .clay(
+                    backgroundColor = ClayCard,
+                    cornerRadius = 20.dp,
+                    elevation = 6.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )) {
+                OutlinedTextField(
+                    value = uiState.email,
+                    onValueChange = viewModel::onEmailChange,
+                    label = { Text("Email address") },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    singleLine = true,
+                    isError = uiState.emailError != null,
+                    supportingText = uiState.emailError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = tgmcTextFieldColors(),
+                    shape = RoundedCornerShape(16.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Password field
             var passwordVisible by remember { mutableStateOf(false) }
-            OutlinedTextField(
-                value = uiState.password,
-                onValueChange = viewModel::onPasswordChange,
-                label = { Text("Password (Min. 8 chars)") },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
-                        )
-                    }
-                },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                singleLine = true,
-                isError = uiState.passwordError != null,
-                modifier = Modifier.fillMaxWidth(),
-                colors = tgmcTextFieldColors(),
-                shape = RoundedCornerShape(12.dp)
-            )
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .clay(
+                    backgroundColor = ClayCard,
+                    cornerRadius = 20.dp,
+                    elevation = 6.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )) {
+                OutlinedTextField(
+                    value = uiState.password,
+                    onValueChange = viewModel::onPasswordChange,
+                    label = { Text("Password (Min. 8 chars)") },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                            )
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    singleLine = true,
+                    isError = uiState.passwordError != null,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = tgmcTextFieldColors(),
+                    shape = RoundedCornerShape(16.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Confirm Password field
-            OutlinedTextField(
-                value = uiState.confirmPassword,
-                onValueChange = viewModel::onConfirmPasswordChange,
-                label = { Text("Confirm Password") },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                        viewModel.register()
-                    }
-                ),
-                singleLine = true,
-                isError = uiState.passwordError != null,
-                supportingText = uiState.passwordError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
-                modifier = Modifier.fillMaxWidth(),
-                colors = tgmcTextFieldColors(),
-                shape = RoundedCornerShape(12.dp)
-            )
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .clay(
+                    backgroundColor = ClayCard,
+                    cornerRadius = 20.dp,
+                    elevation = 6.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )) {
+                OutlinedTextField(
+                    value = uiState.confirmPassword,
+                    onValueChange = viewModel::onConfirmPasswordChange,
+                    label = { Text("Confirm Password") },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                            viewModel.register()
+                        }
+                    ),
+                    singleLine = true,
+                    isError = uiState.passwordError != null,
+                    supportingText = uiState.passwordError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = tgmcTextFieldColors(),
+                    shape = RoundedCornerShape(16.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -219,36 +262,90 @@ fun RegisterScreen(
             if (uiState.error != null) Spacer(modifier = Modifier.height(16.dp))
 
             // Register button
-            Button(
-                onClick = viewModel::register,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                enabled = !uiState.isLoading,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Cyan400,
-                    contentColor = Navy900
-                )
+                    .height(64.dp)
+                    .clay(
+                        backgroundColor = ClayPrimary,
+                        cornerRadius = 24.dp,
+                        elevation = 8.dp,
+                        lightShadowColor = ClayPrimary.copy(alpha = 0.6f),
+                        darkShadowColor = ClayShadowDark
+                    )
+                    .clickable(enabled = !uiState.isLoading, onClick = viewModel::register),
+                contentAlignment = Alignment.Center
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = Navy900,
-                        strokeWidth = 2.dp
+                        modifier = Modifier.size(28.dp),
+                        color = ClayWhite,
+                        strokeWidth = 3.dp
                     )
                 } else {
                     Text(
                         text = "Create Account",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = ClayWhite,
+                            fontSize = 20.sp
                         )
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // Divider
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Divider(modifier = Modifier.weight(1f), color = ClayShadowDark.copy(alpha = 0.5f))
+                Text(
+                    text = "OR",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    style = MaterialTheme.typography.labelSmall.copy(color = ClayTextBody, fontWeight = FontWeight.Bold)
+                )
+                Divider(modifier = Modifier.weight(1f), color = ClayShadowDark.copy(alpha = 0.5f))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Google Login Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .clay(
+                        backgroundColor = ClayWhite,
+                        cornerRadius = 24.dp,
+                        elevation = 8.dp,
+                        lightShadowColor = ClayShadowLight,
+                        darkShadowColor = ClayShadowDark
+                    )
+                    .clickable(onClick = { /* TODO: Implement Google Auth */ }),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.tgm.tgmc.R.drawable.ic_google),
+                        contentDescription = "Google Logo",
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "Sign Up with Google",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = ClayTextTitle,
+                            fontSize = 18.sp
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Login Navigation
             Row(
@@ -258,7 +355,7 @@ fun RegisterScreen(
             ) {
                 Text(
                     text = "Already have an account? ",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = ClayTextBody)
                 )
                 TextButton(
                     onClick = onNavigateToLogin,
@@ -266,8 +363,9 @@ fun RegisterScreen(
                 ) {
                     Text(
                         text = "Sign In",
-                        color = Cyan400,
-                        fontWeight = FontWeight.Bold
+                        color = ClayPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
                     )
                 }
             }

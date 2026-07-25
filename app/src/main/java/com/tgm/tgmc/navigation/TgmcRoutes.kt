@@ -11,11 +11,17 @@ object TgmcRoutes {
         const val REGISTER        = "auth/register"
         const val FORGOT_PASSWORD = "auth/forgot_password"
         const val RESET_PASSWORD  = "auth/reset_password"
+        const val ROLE_SELECTION  = "auth/role_selection"
     }
 
     // ── Parent Graph ─────────────────────────────────────────────
     object Parent {
-        const val DASHBOARD  = "parent/dashboard"
+        const val MAIN_LAYOUT = "parent/main_layout"
+        const val FEED       = "parent/feed"
+        const val STORE      = "parent/store"
+        const val MESSAGES   = "parent/messages"
+        const val DASHBOARD  = "parent/dashboard" // The Child Controls tab
+        
         const val APP_BLOCK  = "parent/app_block"
         const val SCHEDULE   = "parent/schedule"
         const val LOCATION   = "parent/location"
@@ -35,10 +41,10 @@ object TgmcRoutes {
     object Child {
         const val PAIR    = "child/pair"
         const val CONSENT = "child/consent"
-        const val MAIN    = "child/main" // Holds bottom nav
-        const val HOME    = "child/home"
-        const val LEARN   = "child/learn"
+        const val MAIN_LAYOUT = "child/main_layout"
+        const val FEED    = "child/feed"
         const val STORE   = "child/store"
+        const val MESSAGES = "child/messages"
     }
 
     // ── Top-level graphs ─────────────────────────────────────────

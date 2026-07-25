@@ -121,6 +121,28 @@ class TgmcFirebaseMessagingService : FirebaseMessagingService() {
                     message = "$childName has triggered an SOS alert!"
                 )
             }
+            "play_alarm" -> {
+                // If this is the child app, play a loud alarm from the parent
+                Log.i(TAG, "FCM triggered loud alarm from parent")
+                playEmergencyAlarm()
+            }
+        }
+    }
+
+    private fun playEmergencyAlarm() {
+        try {
+            val notificationUri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM)
+                ?: android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE)
+            val ringtone = android.media.RingtoneManager.getRingtone(applicationContext, notificationUri)
+            ringtone.play()
+            
+            // Auto stop after 10 seconds
+            scope.launch {
+                kotlinx.coroutines.delay(10000)
+                if (ringtone.isPlaying) ringtone.stop()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to play emergency alarm: ${e.message}")
         }
     }
 
