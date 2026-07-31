@@ -20,10 +20,15 @@ class BootReceiver : BroadcastReceiver() {
             val serviceIntent = Intent(context, MonitoringForegroundService::class.java).apply {
                 action = Constants.ACTION_START_MONITORING
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(serviceIntent)
+                } else {
+                    context.startService(serviceIntent)
+                }
+            } catch (e: SecurityException) {
+                // On Android 14+, starting a Foreground Service of type camera/microphone 
+                // will throw a SecurityException if the app doesn't have the permissions yet.
             }
         }
     }

@@ -26,7 +26,7 @@ export function UsersPage() {
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ['admin-users', search, page],
     queryFn: () => api.get('/api/admin/users', { params: { search, page } }).then(r => r.data),
-    refetchInterval: 60_000
+    refetchInterval: 2_000 // Real-time polling
   });
 
   const planColor = (plan: string) => ({

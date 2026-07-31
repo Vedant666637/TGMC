@@ -13,4 +13,24 @@
     <string name="channel_alerts_desc">Alerts for parental activity such as geofence, SOS, and app installs</string>
     <string name="channel_sos_name">SOS Emergency</string>
     <string name="channel_sos_desc">Emergency SOS alerts from child device</string>
+
+    <!-- Auth Strings -->
+    <string name="login_welcome">Welcome Back</string>
+    <string name="login_subtitle">Sign in to manage your family</string>
+    <string name="email_hint">Email Address</string>
+    <string name="password_hint">Password</string>
+    <string name="password_hint_min">Password (Min. 8 chars)</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="sign_in_button">Sign In</string>
+    <string name="sign_up_button">Sign Up</string>
+    <string name="no_account_text">Don\'t have an account? </string>
+    
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join TGM-C Guardian Control</string>
+    <string name="name_hint">Parent Name (Optional)</string>
+    <string name="create_account_button">Create Account</string>
+    <string name="already_have_account_text">Already have an account? </string>
+    
+    <string name="language_select">Select Language</string>
 </resources>

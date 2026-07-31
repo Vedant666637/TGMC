@@ -38,8 +38,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "BASE_URL", "\"https://api.tgmc.app\"")
-            buildConfigField("String", "WS_URL", "\"wss://api.tgmc.app\"")
+            buildConfigField("String", "BASE_URL", "\"https://tgmc.onrender.com\"")
+            buildConfigField("String", "WS_URL", "\"wss://tgmc.onrender.com\"")
         }
     }
 
@@ -165,4 +165,13 @@ dependencies {
     androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+}
+
+tasks.register<Copy>("copySplashVideo") {
+    from("../db996122-1d62-4527-a499-a3f67cedfeec.mp4")
+    into("src/main/res/raw")
+    rename { "splash_video.mp4" }
+}
+tasks.named("preBuild") {
+    dependsOn("copySplashVideo")
 }

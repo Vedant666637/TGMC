@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_welcome">वापसी पर स्वागत है</string>
+    <string name="login_subtitle">अपने परिवार को प्रबंधित करने के लिए साइन इन करें</string>
+    <string name="email_hint">ईमेल पता</string>
+    <string name="password_hint">पासवर्ड</string>
+    <string name="password_hint_min">पासवर्ड (न्यूनतम 8 वर्ण)</string>
+    <string name="confirm_password_hint">पासवर्ड की पुष्टि करें</string>
+    <string name="forgot_password">पासवर्ड भूल गए?</string>
+    <string name="sign_in_button">साइन इन करें</string>
+    <string name="sign_up_button">साइन अप करें</string>
+    <string name="no_account_text">खाता नहीं है? </string>
+    
+    <string name="register_title">खाता बनाएं</string>
+    <string name="register_subtitle">TGM-C गार्जियन कंट्रोल से जुड़ें</string>
+    <string name="name_hint">माता-पिता का नाम (वैकल्पिक)</string>
+    <string name="create_account_button">खाता बनाएं</string>
+    <string name="already_have_account_text">क्या आपके पास पहले से खाता है? </string>
+    
+    <string name="language_select">भाषा चुनें</string>
+</resources>

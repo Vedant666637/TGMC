@@ -64,7 +64,7 @@ fun TgmcNavHost(
         // ── Auth Graph ───────────────────────────────────────────
         navigation(
             route = AUTH_GRAPH,
-            startDestination = TgmcRoutes.Auth.LOGIN
+            startDestination = TgmcRoutes.Auth.REGISTER
         ) {
             composable(TgmcRoutes.Auth.LOGIN) {
                 LoginScreen(

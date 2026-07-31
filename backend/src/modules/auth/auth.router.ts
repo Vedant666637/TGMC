@@ -5,6 +5,12 @@ import { prisma } from '../../config/database';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../config/jwt';
 import { v4 as uuidv4 } from 'uuid';
 import { getAuth } from '../../config/firebase';
+import { OAuth2Client } from 'google-auth-library';
+import fs from 'fs';
+
+const WEB_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '451549885245-l27cu0dp7o84r0m6493cjco95lae36ms.apps.googleusercontent.com';
+const ANDROID_CLIENT_ID = '451549885245-t73hghbbfgpbto80optaouu1vi8i3pi4.apps.googleusercontent.com';
+const googleClient = new OAuth2Client();
 
 export const authRouter = Router();
 
@@ -87,21 +93,20 @@ authRouter.post('/google', async (req: Request, res: Response) => {
     return;
   }
 
-  const auth = getAuth();
-  if (!auth) {
-    res.status(500).json({ error: 'Firebase Auth is not initialized on the server.' });
-    return;
-  }
-
   try {
-    const decodedToken = await auth.verifyIdToken(idToken);
-    const email = decodedToken.email;
-    const displayName = decodedToken.name || '';
-
-    if (!email) {
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: [WEB_CLIENT_ID, ANDROID_CLIENT_ID]
+    });
+    const decodedToken = ticket.getPayload();
+    
+    if (!decodedToken || !decodedToken.email) {
       res.status(400).json({ error: 'No email found in Google token' });
       return;
     }
+
+    const email = decodedToken.email;
+    const displayName = decodedToken.name || '';
 
     let parent = await prisma.parent.findUnique({ where: { email } });
     
@@ -124,8 +129,11 @@ authRouter.post('/google', async (req: Request, res: Response) => {
     });
     res.json({ accessToken, refreshToken, role: 'PARENT', userId: parent.id, email: parent.email });
   } catch (err: any) {
-    console.error('Google Auth Error:', err);
-    res.status(401).json({ error: 'Invalid Google ID token' });
+    fs.writeFileSync('auth-error.log', `[${new Date().toISOString()}] GOOGLE AUTH ERROR: ${err.message}\n${err.stack}\n`);
+    console.error('=================== GOOGLE AUTH ERROR ===================');
+    console.error(err);
+    console.error('=========================================================');
+    res.status(401).json({ error: `Invalid Google ID token: ${err.message}` });
   }
 });
 

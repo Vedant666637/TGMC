@@ -21,6 +21,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.composed
+import androidx.compose.runtime.remember
+
 /**
  * Applies a Professional Claymorphism (Neumorphism) effect with soft, dual-directional blur shadows.
  */
@@ -32,41 +35,44 @@ fun Modifier.clay(
     darkShadowColor: Color = Color(0xFFA6B4C8).copy(alpha = 0.6f),
     offsetX: Dp = 8.dp,
     offsetY: Dp = 8.dp
-): Modifier = this.then(
-    Modifier
-        .drawBehind {
-            val radiusPx = cornerRadius.toPx()
-            val blurRadius = elevation.toPx().coerceAtLeast(1f)
-            val xPx = offsetX.toPx()
-            val yPx = offsetY.toPx()
-
-            drawIntoCanvas { canvas ->
-                val frameworkCanvas = canvas.nativeCanvas
-
-                // Dark Shadow (Bottom Right)
-                val darkPaint = android.graphics.Paint().apply {
-                    color = darkShadowColor.toArgb()
-                    maskFilter = android.graphics.BlurMaskFilter(blurRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
-                }
-                frameworkCanvas.drawRoundRect(
-                    xPx, yPx, size.width + xPx, size.height + yPx,
-                    radiusPx, radiusPx, darkPaint
-                )
-
-                // Light Shadow (Top Left)
-                val lightPaint = android.graphics.Paint().apply {
-                    color = lightShadowColor.toArgb()
-                    maskFilter = android.graphics.BlurMaskFilter(blurRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
-                }
-                frameworkCanvas.drawRoundRect(
-                    -xPx, -yPx, size.width - xPx, size.height - yPx,
-                    radiusPx, radiusPx, lightPaint
-                )
-            }
+): Modifier = composed {
+    val radiusPx = cornerRadius.value * androidx.compose.ui.platform.LocalDensity.current.density
+    val blurRadius = elevation.value * androidx.compose.ui.platform.LocalDensity.current.density
+    val xPx = offsetX.value * androidx.compose.ui.platform.LocalDensity.current.density
+    val yPx = offsetY.value * androidx.compose.ui.platform.LocalDensity.current.density
+    
+    val darkPaint = remember(darkShadowColor, blurRadius) {
+        android.graphics.Paint().apply {
+            color = darkShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurRadius.coerceAtLeast(1f), android.graphics.BlurMaskFilter.Blur.NORMAL)
         }
-        .background(backgroundColor, RoundedCornerShape(cornerRadius))
-        .clip(RoundedCornerShape(cornerRadius))
-)
+    }
+    val lightPaint = remember(lightShadowColor, blurRadius) {
+        android.graphics.Paint().apply {
+            color = lightShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurRadius.coerceAtLeast(1f), android.graphics.BlurMaskFilter.Blur.NORMAL)
+        }
+    }
+
+    this.then(
+        Modifier
+            .drawBehind {
+                drawIntoCanvas { canvas ->
+                    val frameworkCanvas = canvas.nativeCanvas
+                    frameworkCanvas.drawRoundRect(
+                        xPx, yPx, size.width + xPx, size.height + yPx,
+                        radiusPx, radiusPx, darkPaint
+                    )
+                    frameworkCanvas.drawRoundRect(
+                        -xPx, -yPx, size.width - xPx, size.height - yPx,
+                        radiusPx, radiusPx, lightPaint
+                    )
+                }
+            }
+            .background(backgroundColor, RoundedCornerShape(cornerRadius))
+            .clip(RoundedCornerShape(cornerRadius))
+    )
+}
 
 /**
  * Applies an inset Claymorphism effect (inner shadow) for input fields.
@@ -79,50 +85,52 @@ fun Modifier.insetClay(
     darkShadowColor: Color = Color(0xFFA6B4C8).copy(alpha = 0.5f),
     offsetX: Dp = 4.dp,
     offsetY: Dp = 4.dp
-): Modifier = this.then(
-    Modifier
-        .background(backgroundColor, RoundedCornerShape(cornerRadius))
-        .drawWithContent {
-            drawContent()
-            val radiusPx = cornerRadius.toPx()
-            val blurRadius = elevation.toPx().coerceAtLeast(1f)
-            val xPx = offsetX.toPx()
-            val yPx = offsetY.toPx()
-            val strokeWidth = 8.dp.toPx()
+): Modifier = composed {
+    val radiusPx = cornerRadius.value * androidx.compose.ui.platform.LocalDensity.current.density
+    val blurRadius = elevation.value * androidx.compose.ui.platform.LocalDensity.current.density
+    val xPx = offsetX.value * androidx.compose.ui.platform.LocalDensity.current.density
+    val yPx = offsetY.value * androidx.compose.ui.platform.LocalDensity.current.density
+    val strokeWidth = 8.dp.value * androidx.compose.ui.platform.LocalDensity.current.density
 
-            val clipPath = Path().apply {
-                addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, size.width, size.height, CornerRadius(radiusPx, radiusPx)))
-            }
+    val darkPaint = remember(darkShadowColor, blurRadius) {
+        android.graphics.Paint().apply {
+            color = darkShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurRadius.coerceAtLeast(1f), android.graphics.BlurMaskFilter.Blur.NORMAL)
+            style = android.graphics.Paint.Style.STROKE
+            this.strokeWidth = strokeWidth
+        }
+    }
+    val lightPaint = remember(lightShadowColor, blurRadius) {
+        android.graphics.Paint().apply {
+            color = lightShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurRadius.coerceAtLeast(1f), android.graphics.BlurMaskFilter.Blur.NORMAL)
+            style = android.graphics.Paint.Style.STROKE
+            this.strokeWidth = strokeWidth
+        }
+    }
 
-            clipPath(clipPath) {
-                drawIntoCanvas { canvas ->
-                    val frameworkCanvas = canvas.nativeCanvas
-
-                    // Dark inner shadow (comes from top-left, pushed bottom-right)
-                    val darkPaint = android.graphics.Paint().apply {
-                        color = darkShadowColor.toArgb()
-                        maskFilter = android.graphics.BlurMaskFilter(blurRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
-                        style = android.graphics.Paint.Style.STROKE
-                        this.strokeWidth = strokeWidth
+    this.then(
+        Modifier
+            .background(backgroundColor, RoundedCornerShape(cornerRadius))
+            .drawWithContent {
+                drawContent()
+                val clipPath = Path().apply {
+                    addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, size.width, size.height, CornerRadius(radiusPx, radiusPx)))
+                }
+                clipPath(clipPath) {
+                    drawIntoCanvas { canvas ->
+                        val frameworkCanvas = canvas.nativeCanvas
+                        frameworkCanvas.drawRoundRect(
+                            -xPx, -yPx, size.width + xPx, size.height + yPx,
+                            radiusPx, radiusPx, darkPaint
+                        )
+                        frameworkCanvas.drawRoundRect(
+                            xPx, yPx, size.width - xPx, size.height - yPx,
+                            radiusPx, radiusPx, lightPaint
+                        )
                     }
-                    frameworkCanvas.drawRoundRect(
-                        -xPx, -yPx, size.width + xPx, size.height + yPx,
-                        radiusPx, radiusPx, darkPaint
-                    )
-
-                    // Light inner shadow (comes from bottom-right, pushed top-left)
-                    val lightPaint = android.graphics.Paint().apply {
-                        color = lightShadowColor.toArgb()
-                        maskFilter = android.graphics.BlurMaskFilter(blurRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
-                        style = android.graphics.Paint.Style.STROKE
-                        this.strokeWidth = strokeWidth
-                    }
-                    frameworkCanvas.drawRoundRect(
-                        xPx, yPx, size.width - xPx, size.height - yPx,
-                        radiusPx, radiusPx, lightPaint
-                    )
                 }
             }
-        }
-        .clip(RoundedCornerShape(cornerRadius))
-)
+            .clip(RoundedCornerShape(cornerRadius))
+    )
+}

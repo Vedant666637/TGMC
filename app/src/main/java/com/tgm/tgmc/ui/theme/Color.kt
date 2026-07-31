@@ -11,10 +11,10 @@ val Navy600 = Color(0xFFE2E8F0)
 val Navy500 = Color(0xFFCBD5E1)
 
 // Accent: Re-mapped to Clay Primary/Secondary
-val Cyan400 = Color(0xFF7C3AED) // ClayPrimary
-val Cyan300 = Color(0xFF8B5CF6)
-val Cyan200 = Color(0xFFA78BFA)
-val Cyan100 = Color(0xFFC4B5FD)
+val Cyan400 = Color(0xFFF97316) // ClayPrimary
+val Cyan300 = Color(0xFFFB923C)
+val Cyan200 = Color(0xFFFDBA74)
+val Cyan100 = Color(0xFFFFEDD5)
 
 // Secondary: Re-mapped to Clay Secondary (Cyan)
 val Indigo400 = Color(0xFF06B6D4) // ClaySecondary
@@ -52,7 +52,7 @@ val ClayCard = Color(0xFFF6F8FF)       // Very bright, slightly blue white
 val ClayWhite = Color(0xFFFFFFFF)
 
 // Clay Accents
-val ClayPrimary = Color(0xFF7C3AED)    // Vibrant Purple
+val ClayPrimary = Color(0xFFF97316)    // Vibrant Orange
 val ClaySecondary = Color(0xFF06B6D4)  // Vibrant Cyan
 val ClayAccent = Color(0xFFF43F5E)     // Vibrant Rose
 

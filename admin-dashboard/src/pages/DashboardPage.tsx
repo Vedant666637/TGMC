@@ -38,7 +38,7 @@ export function DashboardPage() {
   const { data: stats, isLoading } = useQuery<Stats>({
     queryKey: ['admin-stats'],
     queryFn: () => api.get('/api/admin/stats').then(r => r.data),
-    refetchInterval: 30_000
+    refetchInterval: 2_000 // Real-time polling
   });
 
   return (

@@ -16,15 +16,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.focus.FocusDirection
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tgm.tgmc.R
 import com.tgm.tgmc.core.domain.model.UserRole
 import com.tgm.tgmc.ui.theme.*
 
@@ -48,14 +50,46 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(ClayBackground)
     ) {
+        // Decorative 3D Orbs
+        Box(
+            modifier = Modifier
+                .offset(x = (-40).dp, y = (-40).dp)
+                .size(200.dp)
+                .clay(
+                    backgroundColor = ClayBackground,
+                    cornerRadius = 100.dp,
+                    elevation = 20.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 60.dp, y = 80.dp)
+                .size(250.dp)
+                .clay(
+                    backgroundColor = ClayBackground,
+                    cornerRadius = 125.dp,
+                    elevation = 30.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Language Selector
+            LanguageSelector(modifier = Modifier.align(Alignment.End))
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Header
             Box(
@@ -81,14 +115,14 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "Create Account",
+                text = stringResource(id = R.string.register_title),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = ClayTextTitle,
                     fontWeight = FontWeight.Bold
                 )
             )
             Text(
-                text = "Join TGM-C Guardian Control",
+                text = stringResource(id = R.string.register_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(color = ClayTextBody)
             )
 
@@ -107,7 +141,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = uiState.displayName,
                     onValueChange = viewModel::onDisplayNameChange,
-                    label = { Text("Parent Name (Optional)") },
+                    label = { Text(stringResource(id = R.string.name_hint)) },
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
@@ -138,7 +172,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = uiState.email,
                     onValueChange = viewModel::onEmailChange,
-                    label = { Text("Email address") },
+                    label = { Text(stringResource(id = R.string.email_hint)) },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
@@ -172,7 +206,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = uiState.password,
                     onValueChange = viewModel::onPasswordChange,
-                    label = { Text("Password (Min. 8 chars)") },
+                    label = { Text(stringResource(id = R.string.password_hint_min)) },
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -213,7 +247,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = uiState.confirmPassword,
                     onValueChange = viewModel::onConfirmPasswordChange,
-                    label = { Text("Confirm Password") },
+                    label = { Text(stringResource(id = R.string.confirm_password_hint)) },
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
@@ -284,7 +318,7 @@ fun RegisterScreen(
                     )
                 } else {
                     Text(
-                        text = "Create Account",
+                        text = stringResource(id = R.string.create_account_button),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             color = ClayWhite,
@@ -296,57 +330,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Divider
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Divider(modifier = Modifier.weight(1f), color = ClayShadowDark.copy(alpha = 0.5f))
-                Text(
-                    text = "OR",
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    style = MaterialTheme.typography.labelSmall.copy(color = ClayTextBody, fontWeight = FontWeight.Bold)
-                )
-                Divider(modifier = Modifier.weight(1f), color = ClayShadowDark.copy(alpha = 0.5f))
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Google Login Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .clay(
-                        backgroundColor = ClayWhite,
-                        cornerRadius = 24.dp,
-                        elevation = 8.dp,
-                        lightShadowColor = ClayShadowLight,
-                        darkShadowColor = ClayShadowDark
-                    )
-                    .clickable(onClick = { /* TODO: Implement Google Auth */ }),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = androidx.compose.ui.res.painterResource(id = com.tgm.tgmc.R.drawable.ic_google),
-                        contentDescription = "Google Logo",
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = "Sign Up with Google",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = ClayTextTitle,
-                            fontSize = 18.sp
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
             // Login Navigation
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -354,7 +337,7 @@ fun RegisterScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Already have an account? ",
+                    text = stringResource(id = R.string.already_have_account_text),
                     style = MaterialTheme.typography.bodyMedium.copy(color = ClayTextBody)
                 )
                 TextButton(
@@ -362,7 +345,7 @@ fun RegisterScreen(
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
-                        text = "Sign In",
+                        text = stringResource(id = R.string.sign_in_button),
                         color = ClayPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp

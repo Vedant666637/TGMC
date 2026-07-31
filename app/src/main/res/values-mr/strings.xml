@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_welcome">परत स्वागत आहे</string>
+    <string name="login_subtitle">आपले कुटुंब व्यवस्थापित करण्यासाठी साइन इन करा</string>
+    <string name="email_hint">ईमेल पत्ता</string>
+    <string name="password_hint">पासवर्ड</string>
+    <string name="password_hint_min">पासवर्ड (किमान 8 अक्षरे)</string>
+    <string name="confirm_password_hint">पासवर्डची पुष्टी करा</string>
+    <string name="forgot_password">पासवर्ड विसरलात?</string>
+    <string name="sign_in_button">साइन इन करा</string>
+    <string name="sign_up_button">साइन अप करा</string>
+    <string name="no_account_text">खाते नाही का? </string>
+    
+    <string name="register_title">खाते तयार करा</string>
+    <string name="register_subtitle">TGM-C गार्डियन कंट्रोलमध्ये सामील व्हा</string>
+    <string name="name_hint">पालकांचे नाव (पर्यायी)</string>
+    <string name="create_account_button">खाते तयार करा</string>
+    <string name="already_have_account_text">आधीपासूनच खाते आहे का? </string>
+    
+    <string name="language_select">भाषा निवडा</string>
+</resources>

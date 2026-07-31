@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_welcome">С возвращением</string>
+    <string name="login_subtitle">Войдите, чтобы управлять своей семьей</string>
+    <string name="email_hint">Адрес электронной почты</string>
+    <string name="password_hint">Пароль</string>
+    <string name="password_hint_min">Пароль (Мин. 8 символов)</string>
+    <string name="confirm_password_hint">Подтвердите пароль</string>
+    <string name="forgot_password">Забыли пароль?</string>
+    <string name="sign_in_button">Войти</string>
+    <string name="sign_up_button">Зарегистрироваться</string>
+    <string name="no_account_text">Нет аккаунта? </string>
+    
+    <string name="register_title">Создать аккаунт</string>
+    <string name="register_subtitle">Присоединяйтесь к TGM-C</string>
+    <string name="name_hint">Имя родителя (Необязательно)</string>
+    <string name="create_account_button">Создать аккаунт</string>
+    <string name="already_have_account_text">Уже есть аккаунт? </string>
+    
+    <string name="language_select">Выберите язык</string>
+</resources>

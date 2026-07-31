@@ -114,7 +114,13 @@ class MonitoringForegroundService : Service(), LifecycleOwner {
         Log.i(TAG, "Starting monitoring service")
 
         // 1. Mandatory foreground notification (PRD §6.2)
-        startForeground(Constants.NOTIF_ID_FOREGROUND, buildMonitoringNotification())
+        try {
+            startForeground(Constants.NOTIF_ID_FOREGROUND, buildMonitoringNotification())
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Missing FGS permissions for camera/mic/location. Stopping service.", e)
+            stopSelf()
+            return
+        }
 
         // 2. Load device ID, then connect WebSocket
         scope.launch {

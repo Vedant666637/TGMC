@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
@@ -100,11 +101,17 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(60.dp))
+
+            // Language Selector
+            LanguageSelector(modifier = Modifier.align(Alignment.End))
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Logo Header
             Box(
@@ -130,7 +137,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Welcome Back",
+                text = stringResource(id = R.string.login_welcome),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = ClayTextTitle,
                     fontWeight = FontWeight.ExtraBold,
@@ -139,7 +146,7 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Sign in to manage your family",
+                text = stringResource(id = R.string.login_subtitle),
                 style = MaterialTheme.typography.bodyLarge.copy(color = ClayTextBody)
             )
 
@@ -149,7 +156,7 @@ fun LoginScreen(
             ClayInputField(
                 value = uiState.email,
                 onValueChange = viewModel::onEmailChange,
-                hint = "Email Address",
+                hint = stringResource(id = R.string.email_hint),
                 icon = Icons.Default.Email,
                 error = uiState.emailError,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
@@ -163,7 +170,7 @@ fun LoginScreen(
             ClayInputField(
                 value = uiState.password,
                 onValueChange = viewModel::onPasswordChange,
-                hint = "Password",
+                hint = stringResource(id = R.string.password_hint),
                 icon = Icons.Default.Lock,
                 isPassword = !passwordVisible,
                 error = uiState.passwordError,
@@ -191,7 +198,7 @@ fun LoginScreen(
                 modifier = Modifier.align(Alignment.End),
                 contentPadding = PaddingValues(0.dp)
             ) {
-                Text("Forgot password?", color = ClayPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(id = R.string.forgot_password), color = ClayPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -238,7 +245,7 @@ fun LoginScreen(
                     CircularProgressIndicator(modifier = Modifier.size(28.dp), color = ClayWhite, strokeWidth = 3.dp)
                 } else {
                     Text(
-                        text = "Sign In",
+                        text = stringResource(id = R.string.sign_in_button),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             color = ClayWhite,
@@ -249,80 +256,7 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
 
-            // Google Login Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .clay(
-                        backgroundColor = ClayWhite,
-                        cornerRadius = 24.dp,
-                        elevation = 8.dp,
-                        lightShadowColor = ClayShadowLight,
-                        darkShadowColor = ClayShadowDark
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .clickable(onClick = {
-                        coroutineScope.launch {
-                            var activityContext: Context = context
-                            while (activityContext is ContextWrapper && activityContext !is Activity) {
-                                activityContext = activityContext.baseContext
-                            }
-
-                            val googleIdOption = GetGoogleIdOption.Builder()
-                                .setFilterByAuthorizedAccounts(false)
-                                .setServerClientId(context.getString(R.string.default_web_client_id))
-                                .setAutoSelectEnabled(false)
-                                .build()
-
-                            val request = GetCredentialRequest.Builder()
-                                .addCredentialOption(googleIdOption)
-                                .build()
-
-                            try {
-                                val result = credentialManager.getCredential(
-                                    request = request,
-                                    context = activityContext
-                                )
-                                val credential = result.credential
-                                if (credential is androidx.credentials.CustomCredential &&
-                                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-                                ) {
-                                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                                    viewModel.loginWithGoogle(googleIdTokenCredential.idToken)
-                                }
-                            } catch (e: GetCredentialException) {
-                                e.printStackTrace()
-                                viewModel.setAuthError("Google Error: ${e.type} - ${e.message}")
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                viewModel.setAuthError(e.message ?: "An unknown error occurred.")
-                            }
-                        }
-                    }),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_google),
-                        contentDescription = "Google Logo",
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = "Continue with Google",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = ClayTextTitle,
-                            fontSize = 18.sp
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
 
             // Sign Up Navigation
             Row(
@@ -330,9 +264,9 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Don't have an account? ", style = MaterialTheme.typography.bodyMedium.copy(color = ClayTextBody))
+                Text(stringResource(id = R.string.no_account_text), style = MaterialTheme.typography.bodyMedium.copy(color = ClayTextBody))
                 Text(
-                    text = "Sign Up",
+                    text = stringResource(id = R.string.sign_up_button),
                     modifier = Modifier
                         .clickable(onClick = onNavigateToRegister)
                         .padding(8.dp),
@@ -342,37 +276,7 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
 
-            // Child Mode Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .clay(
-                        backgroundColor = ClayCard,
-                        cornerRadius = 24.dp,
-                        elevation = 6.dp,
-                        lightShadowColor = ClayShadowLight,
-                        darkShadowColor = ClayShadowDark
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .clickable(onClick = onChildPairClick),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.ChildCare, contentDescription = null, tint = ClaySecondary, modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Setting up a child device?",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = ClaySecondary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                }
-            }
-            
             Spacer(modifier = Modifier.height(48.dp))
         }
     }
@@ -458,3 +362,81 @@ fun tgmcTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
     unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
 )
+
+@Composable
+fun LanguageSelector(modifier: Modifier = Modifier) {
+    var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    
+    Box(modifier = modifier) {
+        // Pill Button
+        Box(
+            modifier = Modifier
+                .height(48.dp)
+                .clay(
+                    backgroundColor = ClayCard,
+                    cornerRadius = 24.dp,
+                    elevation = 4.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )
+                .clip(RoundedCornerShape(24.dp))
+                .clickable { expanded = true }
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Language, contentDescription = null, tint = ClayPrimary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(id = R.string.language_select),
+                    style = MaterialTheme.typography.labelLarge.copy(color = ClayTextTitle, fontWeight = FontWeight.Bold)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = ClayTextBody, modifier = Modifier.size(20.dp))
+            }
+        }
+        
+        MaterialTheme(
+            colorScheme = MaterialTheme.colorScheme.copy(surface = ClayCard)
+        ) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(ClayCard)
+            ) {
+                DropdownMenuItem(
+                    text = { Text("English", color = ClayTextTitle, fontWeight = FontWeight.Bold) }, 
+                    onClick = { changeLanguage(context, "en"); expanded = false }
+                )
+                DropdownMenuItem(
+                    text = { Text("हिंदी (Hindi)", color = ClayTextTitle, fontWeight = FontWeight.Bold) }, 
+                    onClick = { changeLanguage(context, "hi"); expanded = false }
+                )
+                DropdownMenuItem(
+                    text = { Text("मराठी (Marathi)", color = ClayTextTitle, fontWeight = FontWeight.Bold) }, 
+                    onClick = { changeLanguage(context, "mr"); expanded = false }
+                )
+                DropdownMenuItem(
+                    text = { Text("Русский (Russian)", color = ClayTextTitle, fontWeight = FontWeight.Bold) }, 
+                    onClick = { changeLanguage(context, "ru"); expanded = false }
+                )
+            }
+        }
+    }
+}
+
+fun changeLanguage(context: Context, languageCode: String) {
+    try {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val localeManager = context.getSystemService(android.app.LocaleManager::class.java)
+            localeManager.applicationLocales = android.os.LocaleList.forLanguageTags(languageCode)
+        } else {
+            androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                androidx.core.os.LocaleListCompat.forLanguageTags(languageCode)
+            )
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
