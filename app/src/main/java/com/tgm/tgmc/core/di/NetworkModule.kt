@@ -12,10 +12,15 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import okhttp3.Authenticator
+import okhttp3.Request
+import okhttp3.Response as OkHttpResponse
+import okhttp3.Route
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import dagger.Lazy
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -35,7 +40,55 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: Interceptor): OkHttpClient {
+    fun provideAuthenticator(
+        dataStore: TgmcDataStore,
+        apiService: Lazy<TgmcApiService>
+    ): Authenticator = object : Authenticator {
+        override fun authenticate(route: Route?, response: OkHttpResponse): Request? {
+            // Avoid infinite loops
+            if (response.request.header("Authorization") == null) {
+                return null
+            }
+
+            val refreshToken = runBlocking { dataStore.refreshToken.firstOrNull() }
+            if (refreshToken.isNullOrEmpty()) {
+                return null
+            }
+
+            return runBlocking {
+                try {
+                    val refreshResponse = apiService.get().refreshToken(
+                        com.tgm.tgmc.core.data.remote.RefreshRequest(refreshToken)
+                    )
+                    if (refreshResponse.isSuccessful) {
+                        val newAuth = refreshResponse.body()
+                        if (newAuth != null) {
+                            dataStore.saveAuthTokens(
+                                accessToken = newAuth.accessToken,
+                                refreshToken = newAuth.refreshToken,
+                                role = com.tgm.tgmc.core.domain.model.UserRole.valueOf(newAuth.role),
+                                userId = newAuth.userId,
+                                email = newAuth.email
+                            )
+                            response.request.newBuilder()
+                                .header("Authorization", "Bearer ${newAuth.accessToken}")
+                                .build()
+                        } else null
+                    } else {
+                        // Refresh token also expired or invalid
+                        dataStore.clearAll()
+                        null
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(authInterceptor: Interceptor, authenticator: Authenticator): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG)
                 HttpLoggingInterceptor.Level.BODY
@@ -45,6 +98,7 @@ object NetworkModule {
         
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .authenticator(authenticator)
             .addInterceptor(logging)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

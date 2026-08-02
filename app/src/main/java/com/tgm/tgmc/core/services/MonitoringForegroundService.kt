@@ -115,9 +115,35 @@ class MonitoringForegroundService : Service(), LifecycleOwner {
 
         // 1. Mandatory foreground notification (PRD §6.2)
         try {
-            startForeground(Constants.NOTIF_ID_FOREGROUND, buildMonitoringNotification())
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Missing FGS permissions for camera/mic/location. Stopping service.", e)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                var types = 0
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    types = types or android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                }
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    types = types or android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+                }
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    types = types or android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                }
+                
+                if (types == 0) {
+                    // Fallback if no permissions granted yet, or start without specifying types if on older Android
+                    startForeground(Constants.NOTIF_ID_FOREGROUND, buildMonitoringNotification())
+                } else {
+                    androidx.core.app.ServiceCompat.startForeground(
+                        this,
+                        Constants.NOTIF_ID_FOREGROUND,
+                        buildMonitoringNotification(),
+                        types
+                    )
+                }
+            } else {
+                startForeground(Constants.NOTIF_ID_FOREGROUND, buildMonitoringNotification())
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error starting foreground service: ${e.message}", e)
             stopSelf()
             return
         }
@@ -214,6 +240,12 @@ class MonitoringForegroundService : Service(), LifecycleOwner {
                             val set = mutableSetOf<String>()
                             for (i in 0 until blockedKeywordsArray.length()) set.add(blockedKeywordsArray.getString(i).lowercase())
                             dataStore.saveBlockedKeywords(set)
+                        }
+
+                        // Time schedules
+                        val schedulesArray = data.optJSONArray("schedules")
+                        if (schedulesArray != null) {
+                            dataStore.saveSchedules(schedulesArray.toString())
                         }
                     }
                 }

@@ -6,6 +6,7 @@ import com.tgm.tgmc.core.domain.model.ChildDevice
 import com.tgm.tgmc.core.domain.repository.AuthRepository
 import com.tgm.tgmc.core.domain.repository.DeviceRepository
 import com.tgm.tgmc.core.data.remote.SocketManager
+import com.tgm.tgmc.core.data.remote.TgmcApiService
 import com.tgm.tgmc.core.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,13 +28,15 @@ data class ParentDashboardUiState(
 class ParentDashboardViewModel @Inject constructor(
     private val deviceRepository: DeviceRepository,
     private val authRepository: AuthRepository,
-    private val socketManager: SocketManager
+    private val socketManager: SocketManager,
+    private val apiService: TgmcApiService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ParentDashboardUiState())
     val uiState: StateFlow<ParentDashboardUiState> = _uiState.asStateFlow()
 
     init {
+        socketManager.setApiService(apiService)
         socketManager.connect()
         loadDevices()
     }

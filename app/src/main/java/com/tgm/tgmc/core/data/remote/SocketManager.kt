@@ -68,6 +68,10 @@ class SocketManager @Inject constructor(
     val sosTrigger:      SharedFlow<JSONObject> = _sosTrigger.asSharedFlow()
     val ruleUpdate:      SharedFlow<JSONObject> = _ruleUpdate.asSharedFlow()
 
+    // Injected lazily to avoid circular dependency (ApiService -> OkHttp -> Authenticator -> ApiService)
+    private var apiService: TgmcApiService? = null
+    fun setApiService(service: TgmcApiService) { apiService = service }
+
     // ── Connect ───────────────────────────────────────────────────
     fun connect() {
         scope.launch {
@@ -81,42 +85,88 @@ class SocketManager @Inject constructor(
                 return@launch
             }
 
-            val options = IO.Options.builder()
-                .setAuth(mapOf("token" to token))
-                .setReconnection(true)
-                .setReconnectionAttempts(Int.MAX_VALUE)
-                .setReconnectionDelay(1000)
-                .setReconnectionDelayMax(30_000)
-                .setTimeout(20_000)
-                .build()
+            connectWithToken(token)
+        }
+    }
 
-            socket = IO.socket(URI.create(BuildConfig.WS_URL), options).apply {
-                on(Socket.EVENT_CONNECT) {
-                    Log.i(TAG, "WebSocket connected")
-                    _isConnected.value = true
-                }
-                on(Socket.EVENT_DISCONNECT) { args ->
-                    Log.i(TAG, "WebSocket disconnected: ${args.firstOrNull()}")
-                    _isConnected.value = false
-                }
-                on(Socket.EVENT_CONNECT_ERROR) { args ->
-                    Log.e(TAG, "WebSocket error: ${args.firstOrNull()}")
-                    _isConnected.value = false
-                }
+    private fun connectWithToken(token: String) {
+        socket?.disconnect()
+        socket = null
 
-                // ── Inbound events ──────────────────────────────
-                on(Constants.WS_DEVICE_LOCATION)  { args -> emit(_locationEvents,   args) }
-                on(Constants.WS_CAMERA_REQUEST)   { args -> emit(_cameraRequest,    args) }
-                on(Constants.WS_CAMERA_FRAME)     { args -> emit(_cameraFrame,      args) }
-                on(Constants.WS_MIRROR_START)     { args -> emit(_mirrorStart,      args) }
-                on(Constants.WS_MIRROR_FRAME)     { args -> emit(_mirrorFrame,      args) }
-                on(Constants.WS_AUDIO_START)      { args -> emit(_audioStart,       args) }
-                on(Constants.WS_AUDIO_CHUNK)      { args -> emit(_audioChunk,       args) }
-                on(Constants.WS_SOS_TRIGGER)      { args -> emit(_sosTrigger,       args) }
-                on(Constants.WS_RULE_UPDATE)      { args -> emit(_ruleUpdate,       args) }
+        val options = IO.Options.builder()
+            .setAuth(mapOf("token" to token))
+            .setReconnection(true)
+            .setReconnectionAttempts(Int.MAX_VALUE)
+            .setReconnectionDelay(1000)
+            .setReconnectionDelayMax(30_000)
+            .setTimeout(20_000)
+            .build()
 
-                connect()
+        socket = IO.socket(URI.create(BuildConfig.WS_URL), options).apply {
+            on(Socket.EVENT_CONNECT) {
+                Log.i(TAG, "WebSocket connected")
+                _isConnected.value = true
             }
+            on(Socket.EVENT_DISCONNECT) { args ->
+                Log.i(TAG, "WebSocket disconnected: ${args.firstOrNull()}")
+                _isConnected.value = false
+            }
+            on(Socket.EVENT_CONNECT_ERROR) { args ->
+                val errorMsg = args.firstOrNull()?.toString() ?: ""
+                Log.e(TAG, "WebSocket error: $errorMsg")
+                _isConnected.value = false
+                // If the error is an invalid/expired token, try to refresh and reconnect
+                if (errorMsg.contains("Invalid token", ignoreCase = true) ||
+                    errorMsg.contains("token", ignoreCase = true)
+                ) {
+                    scope.launch { refreshTokenAndReconnect() }
+                }
+            }
+
+            // ── Inbound events ──────────────────────────────
+            on(Constants.WS_DEVICE_LOCATION)  { args -> emit(_locationEvents,   args) }
+            on(Constants.WS_CAMERA_REQUEST)   { args -> emit(_cameraRequest,    args) }
+            on(Constants.WS_CAMERA_FRAME)     { args -> emit(_cameraFrame,      args) }
+            on(Constants.WS_MIRROR_START)     { args -> emit(_mirrorStart,      args) }
+            on(Constants.WS_MIRROR_FRAME)     { args -> emit(_mirrorFrame,      args) }
+            on(Constants.WS_AUDIO_START)      { args -> emit(_audioStart,       args) }
+            on(Constants.WS_AUDIO_CHUNK)      { args -> emit(_audioChunk,       args) }
+            on(Constants.WS_SOS_TRIGGER)      { args -> emit(_sosTrigger,       args) }
+            on(Constants.WS_RULE_UPDATE)      { args -> emit(_ruleUpdate,       args) }
+
+            connect()
+        }
+    }
+
+    /** Tries to refresh the access token and reconnects the socket with the new token */
+    private suspend fun refreshTokenAndReconnect() {
+        val svc = apiService ?: return
+        val storedRefresh = dataStore.refreshToken.firstOrNull()
+        if (storedRefresh.isNullOrEmpty()) {
+            Log.w(TAG, "No refresh token stored — cannot reconnect WebSocket")
+            return
+        }
+        try {
+            val response = svc.refreshToken(RefreshRequest(storedRefresh))
+            if (response.isSuccessful) {
+                val newAuth = response.body()
+                if (newAuth != null) {
+                    dataStore.saveAuthTokens(
+                        accessToken  = newAuth.accessToken,
+                        refreshToken = newAuth.refreshToken,
+                        role         = com.tgm.tgmc.core.domain.model.UserRole.valueOf(newAuth.role),
+                        userId       = newAuth.userId,
+                        email        = newAuth.email
+                    )
+                    Log.i(TAG, "Token refreshed — reconnecting WebSocket")
+                    connectWithToken(newAuth.accessToken)
+                }
+            } else {
+                Log.w(TAG, "Token refresh failed (${response.code()}) — clearing session")
+                dataStore.clearAll()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during token refresh: ${e.message}")
         }
     }
 

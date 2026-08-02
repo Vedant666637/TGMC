@@ -14,7 +14,15 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.util.Calendar
+
+data class TimeSchedule(
+    val startHour: Int, val startMinute: Int,
+    val endHour: Int, val endMinute: Int,
+    val activeDays: List<Int>
+)
 
 /**
  * Accessibility Service for app usage monitoring AND web content filtering on the Child App.
@@ -34,9 +42,12 @@ class TgmcAccessibilityService : AccessibilityService() {
     private var blockedAppsCache = emptySet<String>()
     private var blockedDomainsCache = emptySet<String>()
     private var blockedKeywordsCache = emptySet<String>()
+    private var schedulesCache = emptyList<TimeSchedule>()
 
     // Track the last blocked URL to avoid spamming the overlay
     private var lastBlockedUrl: String? = null
+    // Track current package for periodic schedule checking
+    private var currentPackageName: String? = null
 
     // Known browser packages and their URL bar view IDs
     private val browserUrlBarIds = mapOf(
@@ -92,6 +103,58 @@ class TgmcAccessibilityService : AccessibilityService() {
                 Log.d(TAG, "Blocked keywords updated: ${keywords.size} rules")
             }
         }
+        // Collect schedules
+        serviceScope.launch {
+            dataStore.schedules.collectLatest { schedulesJson ->
+                try {
+                    val jsonArray = org.json.JSONArray(schedulesJson)
+                    val list = mutableListOf<TimeSchedule>()
+                    for (i in 0 until jsonArray.length()) {
+                        val obj = jsonArray.getJSONObject(i)
+                        val daysArray = try { org.json.JSONArray(obj.getString("activeDays")) } catch (e: Exception) { null }
+                        val activeDays = mutableListOf<Int>()
+                        if (daysArray != null) {
+                            for (j in 0 until daysArray.length()) {
+                                activeDays.add(daysArray.getInt(j))
+                            }
+                        }
+                        list.add(TimeSchedule(
+                            startHour = obj.getInt("startHour"),
+                            startMinute = obj.getInt("startMinute"),
+                            endHour = obj.getInt("endHour"),
+                            endMinute = obj.getInt("endMinute"),
+                            activeDays = activeDays
+                        ))
+                    }
+                    schedulesCache = list
+                    Log.d(TAG, "Schedules updated: ${list.size} rules")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to parse schedules", e)
+                }
+            }
+        }
+        
+        // Background checker for active schedules
+        serviceScope.launch {
+            while (true) {
+                if (isTimeScheduleActive() && isAppBlockable(currentPackageName)) {
+                    launchAppBlockOverlay("It is currently downtime. Please put your device away.")
+                }
+                kotlinx.coroutines.delay(30_000)
+            }
+        }
+    }
+
+    private fun isAppBlockable(packageName: String?): Boolean {
+        if (packageName == null) return false
+        if (packageName == this.packageName ||
+            packageName == "com.android.settings" ||
+            packageName == "com.google.android.packageinstaller" ||
+            packageName.contains("launcher")
+        ) {
+            return false
+        }
+        return true
     }
 
     override fun onServiceConnected() {
@@ -110,20 +173,21 @@ class TgmcAccessibilityService : AccessibilityService() {
         val evt = event ?: return
         val packageName = evt.packageName?.toString() ?: return
 
-        // Never block our own app, settings, or launchers
-        if (packageName == this.packageName ||
-            packageName == "com.android.settings" ||
-            packageName == "com.google.android.packageinstaller" ||
-            packageName.contains("launcher")
-        ) {
+        if (!isAppBlockable(packageName)) {
             return
         }
 
+        currentPackageName = packageName
+
         when (evt.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
-                // ── App Blocking ──
+                // ── App & Schedule Blocking ──
+                if (isTimeScheduleActive()) {
+                    launchAppBlockOverlay("It is currently downtime. Please put your device away.")
+                    return
+                }
                 if (blockedAppsCache.contains(packageName)) {
-                    launchBlockOverlay("This app has been blocked by your parent.")
+                    launchAppBlockOverlay("This app has been blocked by your parent.")
                     return
                 }
                 // Reset last blocked URL when switching apps
@@ -177,7 +241,7 @@ class TgmcAccessibilityService : AccessibilityService() {
         if (domain != null && isDomainBlocked(domain)) {
             Log.i(TAG, "BLOCKED domain: $domain (URL: $normalizedUrl)")
             lastBlockedUrl = normalizedUrl
-            launchBlockOverlay("This website ($domain) has been blocked by your parent.")
+            launchWebBlockOverlay("This website ($domain) has been blocked by your parent.")
             return
         }
 
@@ -186,7 +250,7 @@ class TgmcAccessibilityService : AccessibilityService() {
         if (matchedKeyword != null) {
             Log.i(TAG, "BLOCKED keyword '$matchedKeyword' found in URL: $normalizedUrl")
             lastBlockedUrl = normalizedUrl
-            launchBlockOverlay("This page contains blocked content (\"$matchedKeyword\").")
+            launchWebBlockOverlay("This page contains blocked content (\"$matchedKeyword\").")
             return
         }
     }
@@ -256,9 +320,41 @@ class TgmcAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Launches the full-screen block overlay Activity, pushing the user out of the browser.
+     * Checks if the current time falls within any active time schedule.
      */
-    private fun launchBlockOverlay(reason: String) {
+    private fun isTimeScheduleActive(): Boolean {
+        if (schedulesCache.isEmpty()) return false
+        
+        val cal = Calendar.getInstance()
+        // JS uses 0=Sunday, 1=Monday... Calendar uses 1=Sunday, 2=Monday...
+        val currentDay = cal.get(Calendar.DAY_OF_WEEK) - 1 
+        val currentTotalMinutes = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+        
+        for (schedule in schedulesCache) {
+            if (schedule.activeDays.contains(currentDay)) {
+                val startTotal = schedule.startHour * 60 + schedule.startMinute
+                val endTotal = schedule.endHour * 60 + schedule.endMinute
+                
+                if (startTotal <= endTotal) {
+                    if (currentTotalMinutes in startTotal until endTotal) return true
+                } else {
+                    // Handles overnight schedules (e.g. 22:00 to 06:00)
+                    if (currentTotalMinutes >= startTotal || currentTotalMinutes < endTotal) return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun launchAppBlockOverlay(reason: String) {
+        val intent = Intent(this, AppBlockActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("block_reason", reason)
+        }
+        startActivity(intent)
+    }
+
+    private fun launchWebBlockOverlay(reason: String) {
         val intent = Intent(this, WebBlockActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("block_reason", reason)

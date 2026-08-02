@@ -55,8 +55,11 @@ class AppBlockActivity : ComponentActivity() {
                         )
                     )
                     Spacer(modifier = Modifier.height(12.dp))
+                    val blockReason = intent.getStringExtra("block_reason") 
+                        ?: "Your parent has blocked access to this application. Please use other educational features or ask your parent to unlock it."
+                        
                     Text(
-                        text = "Your parent has blocked access to this application. Please use other educational features or ask your parent to unlock it.",
+                        text = blockReason,
                         style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp)

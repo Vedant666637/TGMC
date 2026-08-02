@@ -36,11 +36,13 @@ class TgmcDataStore @Inject constructor(
     private val BLOCKED_PACKAGES = stringSetPreferencesKey("blocked_packages")
     private val BLOCKED_DOMAINS = stringSetPreferencesKey("blocked_domains")
     private val BLOCKED_KEYWORDS = stringSetPreferencesKey("blocked_keywords")
+    private val SCHEDULES = stringPreferencesKey("schedules")
 
     // ── Reads ─────────────────────────────────────────────────────
     val blockedPackages: Flow<Set<String>> = dataStore.data.map { it[BLOCKED_PACKAGES] ?: emptySet() }
     val blockedDomains: Flow<Set<String>> = dataStore.data.map { it[BLOCKED_DOMAINS] ?: emptySet() }
     val blockedKeywords: Flow<Set<String>> = dataStore.data.map { it[BLOCKED_KEYWORDS] ?: emptySet() }
+    val schedules: Flow<String> = dataStore.data.map { it[SCHEDULES] ?: "[]" }
     val accessToken: Flow<String?> = dataStore.data.map { 
         val raw = it[ACCESS_TOKEN]
         if (!raw.isNullOrEmpty()) com.tgm.tgmc.core.util.CryptoManager.decrypt(raw) else null
@@ -92,6 +94,10 @@ class TgmcDataStore @Inject constructor(
 
     suspend fun saveBlockedKeywords(keywords: Set<String>) {
         dataStore.edit { it[BLOCKED_KEYWORDS] = keywords }
+    }
+
+    suspend fun saveSchedules(schedulesJson: String) {
+        dataStore.edit { it[SCHEDULES] = schedulesJson }
     }
 
     suspend fun markConsentGiven() {
