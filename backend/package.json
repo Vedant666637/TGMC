@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node src/app.ts",
     "build": "prisma generate && prisma db push --accept-data-loss && tsc",
+    "postbuild": "npx prisma migrate resolve --applied 20260723070948_init_messages || true",
     "start": "node dist/app.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
