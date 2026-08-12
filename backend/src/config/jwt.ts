@@ -8,7 +8,7 @@ const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES || '30d';
 export interface JwtPayload {
   userId: string;
   email: string;
-  role: 'PARENT' | 'ADMIN';
+  role: 'PARENT' | 'ADMIN' | 'CHILD';
 }
 
 export const generateAccessToken = (payload: JwtPayload): string =>
