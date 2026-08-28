@@ -16,9 +16,9 @@ data class ChildDevice(
     val deviceId: String,
     val childName: String,
     val model: String,
-    val isOnline: Boolean,
-    val batteryLevel: Int,
-    val pairedAt: Long
+    val isOnline: Boolean = false,         // default false; real-time status comes from Firebase
+    val batteryLevel: Int = 0,             // optional field, default 0
+    val pairedAt: String = ""              // Prisma returns ISO-8601 string e.g. "2026-08-28T13:20:34.110Z"
 )
 
 @Serializable

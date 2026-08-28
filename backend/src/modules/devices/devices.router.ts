@@ -11,7 +11,16 @@ devicesRouter.get('/', async (req: AuthRequest, res: Response) => {
     where: { parentId: req.user!.userId },
     orderBy: { pairedAt: 'desc' }
   });
-  res.json(devices);
+  // Map Prisma field names → Android model field names
+  const mapped = devices.map(d => ({
+    deviceId:     d.id,
+    childName:    d.childName,
+    model:        d.deviceModel,
+    isOnline:     false,        // real-time status comes from Firebase, not DB
+    batteryLevel: 0,            // reported by child device via Firebase
+    pairedAt:     d.pairedAt.toISOString()
+  }));
+  res.json(mapped);
 });
 
 // DELETE /api/devices/:deviceId  (unpair)
