@@ -21,7 +21,6 @@ import com.tgm.tgmc.MainActivity
 import com.tgm.tgmc.R
 import com.tgm.tgmc.core.data.local.TgmcDataStore
 import com.tgm.tgmc.core.data.remote.FirebaseManager
-import com.tgm.tgmc.core.data.remote.FirebaseManager
 import com.tgm.tgmc.core.data.remote.TgmcApiService
 import com.tgm.tgmc.core.domain.model.LocationData
 import com.tgm.tgmc.core.domain.repository.LocationRepository
