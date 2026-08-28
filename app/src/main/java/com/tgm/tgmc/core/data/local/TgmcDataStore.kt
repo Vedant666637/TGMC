@@ -37,6 +37,7 @@ class TgmcDataStore @Inject constructor(
     private val BLOCKED_DOMAINS = stringSetPreferencesKey("blocked_domains")
     private val BLOCKED_KEYWORDS = stringSetPreferencesKey("blocked_keywords")
     private val SCHEDULES = stringPreferencesKey("schedules")
+    private val SELECTED_DEVICE_ID = stringPreferencesKey("selected_device_id")
 
     // ── Reads ─────────────────────────────────────────────────────
     val blockedPackages: Flow<Set<String>> = dataStore.data.map { it[BLOCKED_PACKAGES] ?: emptySet() }
@@ -63,6 +64,8 @@ class TgmcDataStore @Inject constructor(
     val isPaired: Flow<Boolean> = dataStore.data.map { it[IS_PAIRED] ?: false }
     val deviceId: Flow<String?> = dataStore.data.map { it[DEVICE_ID] }
     val consentGiven: Flow<Boolean> = dataStore.data.map { it[CONSENT_GIVEN] ?: false }
+    // The parent's currently selected child device (survives screen navigation)
+    val selectedDeviceId: Flow<String?> = dataStore.data.map { it[SELECTED_DEVICE_ID] }
 
     // ── Writes ────────────────────────────────────────────────────
     suspend fun saveAuthTokens(accessToken: String, refreshToken: String, role: UserRole, userId: String, email: String) {
@@ -78,6 +81,10 @@ class TgmcDataStore @Inject constructor(
 
     suspend fun saveDeviceId(deviceId: String) {
         dataStore.edit { it[DEVICE_ID] = deviceId }
+    }
+
+    suspend fun saveSelectedDeviceId(deviceId: String) {
+        dataStore.edit { it[SELECTED_DEVICE_ID] = deviceId }
     }
 
     suspend fun markPaired(isPaired: Boolean) {

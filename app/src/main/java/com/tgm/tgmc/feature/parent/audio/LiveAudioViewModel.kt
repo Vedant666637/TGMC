@@ -2,20 +2,19 @@ package com.tgm.tgmc.feature.parent.audio
 
 import android.media.AudioAttributes
 import android.media.AudioFormat
-import android.media.AudioManager
 import android.media.AudioTrack
 import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tgm.tgmc.core.data.local.TgmcDataStore
 import com.tgm.tgmc.core.data.remote.FirebaseManager
-import com.tgm.tgmc.core.domain.repository.DeviceRepository
-import com.tgm.tgmc.core.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,7 +28,7 @@ data class LiveAudioUiState(
 @HiltViewModel
 class LiveAudioViewModel @Inject constructor(
     private val firebaseManager: FirebaseManager,
-    private val deviceRepository: DeviceRepository
+    private val dataStore: TgmcDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LiveAudioUiState())
@@ -45,17 +44,13 @@ class LiveAudioViewModel @Inject constructor(
     }
 
     init {
-        // Resolve active target child device
+        // Read deviceId directly from local DataStore — no REST API call needed
         viewModelScope.launch {
-            when (val result = deviceRepository.getDevices()) {
-                is Result.Success -> {
-                    val activeDevice = result.data.firstOrNull { it.isOnline } ?: result.data.firstOrNull()
-                    _uiState.update { it.copy(deviceId = activeDevice?.deviceId) }
-                }
-                is Result.Error -> {
-                    _uiState.update { it.copy(error = "No paired child devices found") }
-                }
-                is Result.Loading -> { /* Handled via flow or ignore */ }
+            val deviceId = dataStore.selectedDeviceId.firstOrNull()
+            if (deviceId != null) {
+                _uiState.update { it.copy(deviceId = deviceId) }
+            } else {
+                _uiState.update { it.copy(error = "No child device selected. Go back to the dashboard first.") }
             }
         }
 
@@ -77,7 +72,7 @@ class LiveAudioViewModel @Inject constructor(
 
     fun startListening() {
         val targetId = _uiState.value.deviceId ?: run {
-            _uiState.update { it.copy(error = "No active device connection") }
+            _uiState.update { it.copy(error = "No child device selected. Go back to the dashboard first.") }
             return
         }
 
@@ -103,8 +98,6 @@ class LiveAudioViewModel @Inject constructor(
 
             audioTrack?.play()
             _uiState.update { it.copy(isStreaming = true, error = null) }
-
-            // Request child device to start recording via Firebase
             firebaseManager.requestAudio(targetId, "start")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize AudioTrack: ${e.message}")
@@ -115,9 +108,7 @@ class LiveAudioViewModel @Inject constructor(
     fun stopListening() {
         val targetId = _uiState.value.deviceId ?: return
         _uiState.update { it.copy(isStreaming = false) }
-
         firebaseManager.requestAudio(targetId, "stop")
-
         try {
             audioTrack?.stop()
             audioTrack?.release()

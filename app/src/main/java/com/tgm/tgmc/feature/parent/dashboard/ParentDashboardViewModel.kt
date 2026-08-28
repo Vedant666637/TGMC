@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tgm.tgmc.core.domain.model.ChildDevice
 import com.tgm.tgmc.core.domain.repository.AuthRepository
 import com.tgm.tgmc.core.domain.repository.DeviceRepository
+import com.tgm.tgmc.core.data.local.TgmcDataStore
 import com.tgm.tgmc.core.data.remote.FirebaseManager
 import com.tgm.tgmc.core.data.remote.TgmcApiService
 import com.tgm.tgmc.core.util.Result
@@ -29,6 +30,7 @@ class ParentDashboardViewModel @Inject constructor(
     private val deviceRepository: DeviceRepository,
     private val authRepository: AuthRepository,
     private val firebaseManager: FirebaseManager,
+    private val dataStore: TgmcDataStore,
     private val apiService: TgmcApiService
 ) : ViewModel() {
 
@@ -69,8 +71,11 @@ class ParentDashboardViewModel @Inject constructor(
                 is Result.Success -> {
                     val devices = result.data
                     val defaultDevice = _uiState.value.selectedDevice ?: devices.firstOrNull()
-                    // Start watching Firebase for real-time status of this device
-                    defaultDevice?.let { dev -> firebaseManager.watchDevice(dev.deviceId) }
+                    defaultDevice?.let { dev ->
+                        firebaseManager.watchDevice(dev.deviceId)
+                        // Save to DataStore so feature screens don't need to call REST API
+                        dataStore.saveSelectedDeviceId(dev.deviceId)
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -90,6 +95,8 @@ class ParentDashboardViewModel @Inject constructor(
     fun selectDevice(device: ChildDevice) {
         // Switch Firebase listener to the newly selected device
         firebaseManager.watchDevice(device.deviceId)
+        // Persist so Camera/Mirror/Audio screens know which device to target
+        viewModelScope.launch { dataStore.saveSelectedDeviceId(device.deviceId) }
         _uiState.update { it.copy(selectedDevice = device) }
     }
 
