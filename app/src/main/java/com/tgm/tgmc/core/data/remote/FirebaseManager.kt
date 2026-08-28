@@ -39,6 +39,10 @@ class FirebaseManager @Inject constructor(
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
+    // ── Real-time child device online/offline status ───────────────
+    private val _deviceOnlineStatus = MutableStateFlow(false)
+    val deviceOnlineStatus: StateFlow<Boolean> = _deviceOnlineStatus.asStateFlow()
+
     // ── Inbound event flows ────────────────────────────────────────
     private val _locationEvents   = MutableSharedFlow<JSONObject>(extraBufferCapacity = 64)
     private val _sosTrigger       = MutableSharedFlow<JSONObject>(extraBufferCapacity = 8)
@@ -176,7 +180,7 @@ class FirebaseManager @Inject constructor(
                         }
                     }
                 }
-                
+
                 // Handle SOS
                 snapshot.child("sos").value?.let { sos ->
                     val map = sos as? Map<*, *>
@@ -191,6 +195,10 @@ class FirebaseManager @Inject constructor(
                         }
                     }
                 }
+
+                // Handle real-time online/offline status
+                val status = snapshot.child("status").getValue(String::class.java)
+                _deviceOnlineStatus.value = (status == "online")
             }
             override fun onCancelled(error: DatabaseError) {}
         }

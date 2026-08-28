@@ -38,6 +38,28 @@ class ParentDashboardViewModel @Inject constructor(
     init {
         firebaseManager.connect()
         loadDevices()
+
+        // ── Observe real-time Online/Offline status from Firebase ──
+        // This listens 24/7. When the child's phone turns off or loses internet,
+        // Firebase automatically sets their status to "offline" and this updates the UI.
+        viewModelScope.launch {
+            firebaseManager.deviceOnlineStatus.collect { isOnline ->
+                _uiState.update { state ->
+                    val updatedSelected = state.selectedDevice?.copy(isOnline = isOnline)
+                    val updatedDevices = state.devices.map { device ->
+                        if (device.deviceId == state.selectedDevice?.deviceId) {
+                            device.copy(isOnline = isOnline)
+                        } else {
+                            device
+                        }
+                    }
+                    state.copy(
+                        selectedDevice = updatedSelected,
+                        devices = updatedDevices
+                    )
+                }
+            }
+        }
     }
 
     fun loadDevices() {
@@ -47,13 +69,14 @@ class ParentDashboardViewModel @Inject constructor(
                 is Result.Success -> {
                     val devices = result.data
                     val defaultDevice = _uiState.value.selectedDevice ?: devices.firstOrNull()
+                    // Start watching Firebase for real-time status of this device
                     defaultDevice?.let { dev -> firebaseManager.watchDevice(dev.deviceId) }
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
-                            isLoading = false, 
+                            isLoading = false,
                             devices = devices,
                             selectedDevice = defaultDevice
-                        ) 
+                        )
                     }
                 }
                 is Result.Error -> {
@@ -65,6 +88,7 @@ class ParentDashboardViewModel @Inject constructor(
     }
 
     fun selectDevice(device: ChildDevice) {
+        // Switch Firebase listener to the newly selected device
         firebaseManager.watchDevice(device.deviceId)
         _uiState.update { it.copy(selectedDevice = device) }
     }
