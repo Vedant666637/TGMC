@@ -6,7 +6,7 @@ import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tgm.tgmc.core.data.remote.SocketManager
+import com.tgm.tgmc.core.data.remote.FirebaseManager
 import com.tgm.tgmc.core.domain.repository.DeviceRepository
 import com.tgm.tgmc.core.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +26,7 @@ data class ScreenMirrorUiState(
 
 @HiltViewModel
 class ScreenMirrorViewModel @Inject constructor(
-    private val socketManager: SocketManager,
+    private val firebaseManager: FirebaseManager,
     private val deviceRepository: DeviceRepository
 ) : ViewModel() {
 
@@ -48,9 +48,9 @@ class ScreenMirrorViewModel @Inject constructor(
             }
         }
 
-        // Collect incoming mirror frames
+        // Collect incoming mirror frames from Firebase
         viewModelScope.launch {
-            socketManager.mirrorFrame.collect { data ->
+            firebaseManager.mirrorFrame.collect { data ->
                 val frameBase64 = data.optString("frameBase64")
                 if (frameBase64.isNotEmpty()) {
                     try {
@@ -72,14 +72,14 @@ class ScreenMirrorViewModel @Inject constructor(
         }
 
         _uiState.update { it.copy(isStreaming = true, latestFrame = null) }
-        // Request start mirroring via Socket.IO
-        socketManager.requestMirror(targetId)
+        // Request start mirroring via Firebase
+        firebaseManager.requestMirror(targetId)
     }
 
     fun stopMirroring() {
         val targetId = _uiState.value.deviceId ?: return
         _uiState.update { it.copy(isStreaming = false, latestFrame = null) }
-        socketManager.requestMirror(targetId, "stop")
+        firebaseManager.requestMirror(targetId, "stop")
     }
 
     override fun onCleared() {

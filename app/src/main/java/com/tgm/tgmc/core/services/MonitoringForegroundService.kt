@@ -21,6 +21,8 @@ import com.tgm.tgmc.MainActivity
 import com.tgm.tgmc.R
 import com.tgm.tgmc.core.data.local.TgmcDataStore
 import com.tgm.tgmc.core.data.remote.FirebaseManager
+import com.tgm.tgmc.core.data.remote.FirebaseManager
+import com.tgm.tgmc.core.data.remote.TgmcApiService
 import com.tgm.tgmc.core.domain.model.LocationData
 import com.tgm.tgmc.core.domain.repository.LocationRepository
 import com.tgm.tgmc.core.util.Constants
@@ -57,6 +59,7 @@ class MonitoringForegroundService : Service(), LifecycleOwner {
     override val lifecycle: Lifecycle get() = lifecycleRegistry
 
     @Inject lateinit var firebaseManager: FirebaseManager
+    @Inject lateinit var apiService: TgmcApiService
     @Inject lateinit var dataStore: TgmcDataStore
     @Inject lateinit var locationRepository: LocationRepository
 
@@ -161,15 +164,9 @@ class MonitoringForegroundService : Service(), LifecycleOwner {
             audioHandler = AudioHandler(firebaseManager, deviceId!!)
             screenMirrorHandler = ScreenMirrorHandler(this@MonitoringForegroundService, firebaseManager, deviceId!!)
 
-            // 3. Media handlers don't need persistent connection until requested
-            // We only keep the connection active if a stream is running (managed by handlers)
-            // But we can notify the backend that we are online
-            try {
-                val apiService = (applicationContext as com.tgm.tgmc.TgmcApplication)
-                    // You would inject TgmcApiService here if it wasn't a Service, or use an EntryPoint
-                    // Assuming we have locationRepository which has apiService inside it or we just use REST
-            } catch(e: Exception) {}
-
+            // Connect Firebase Realtime DB
+            firebaseManager.connect()
+            firebaseManager.joinAsDevice(deviceId!!)
         }
 
         // 5. Start GPS location updates

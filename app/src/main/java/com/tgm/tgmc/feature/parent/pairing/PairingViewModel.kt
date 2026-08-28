@@ -38,9 +38,12 @@ class PairingViewModel @Inject constructor(
                         it.copy(isLoading = false, code = response.body()!!.code) 
                     }
                 } else {
-                    _uiState.update { 
-                        it.copy(isLoading = false, error = "Failed to generate code: ${response.code()}") 
+                    val msg = when (response.code()) {
+                        401 -> "Session expired. Please log out and log in again."
+                        403 -> "Parent account required to generate pairing codes."
+                        else -> "Failed to generate code: ${response.code()}"
                     }
+                    _uiState.update { it.copy(isLoading = false, error = msg) }
                 }
             } catch (e: Exception) {
                 _uiState.update { 

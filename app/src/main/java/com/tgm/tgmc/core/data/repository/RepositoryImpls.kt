@@ -85,11 +85,24 @@ class PairingRepositoryImpl @Inject constructor(
 
     override suspend fun activateCode(code: String, deviceModel: String, deviceName: String?): Result<Pair<String, String>> =
         safeCall {
-            val body = api.activatePairingCode(
+            val response = api.activatePairingCode(
                 PairActivateRequest(code, deviceName ?: "Child", deviceModel)
-            ).body()!!
+            )
+            if (!response.isSuccessful || response.body() == null) {
+                throw Exception("Activation failed: ${response.code()}")
+            }
+            val body = response.body()!!
             dataStore.saveDeviceId(body.deviceId)
             dataStore.markPaired(true)
+            if (!body.accessToken.isNullOrEmpty() && !body.refreshToken.isNullOrEmpty()) {
+                dataStore.saveAuthTokens(
+                    accessToken = body.accessToken,
+                    refreshToken = body.refreshToken,
+                    role = com.tgm.tgmc.core.domain.model.UserRole.CHILD,
+                    userId = body.deviceId,
+                    email = body.parentEmail
+                )
+            }
             Pair(body.deviceId, body.parentEmail)
         }
 }

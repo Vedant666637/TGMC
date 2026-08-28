@@ -154,7 +154,7 @@ class SocketManager @Inject constructor(
                     dataStore.saveAuthTokens(
                         accessToken  = newAuth.accessToken,
                         refreshToken = newAuth.refreshToken,
-                        role         = com.tgm.tgmc.core.domain.model.UserRole.valueOf(newAuth.role),
+                        role         = newAuth.role,
                         userId       = newAuth.userId,
                         email        = newAuth.email
                     )

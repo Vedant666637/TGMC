@@ -166,12 +166,3 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 }
-
-tasks.register<Copy>("copySplashVideo") {
-    from("../db996122-1d62-4527-a499-a3f67cedfeec.mp4")
-    into("src/main/res/raw")
-    rename { "splash_video.mp4" }
-}
-tasks.named("preBuild") {
-    dependsOn("copySplashVideo")
-}

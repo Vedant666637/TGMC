@@ -2,12 +2,15 @@ package com.tgm.tgmc.feature.child.presentation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -34,10 +37,12 @@ fun ChildMainLayout(
     )
 
     Scaffold(
+        containerColor = ClayBackground,
         bottomBar = {
             NavigationBar(
-                containerColor = Navy800,
-                contentColor = Cyan400
+                containerColor = ClayCard,
+                contentColor = ClaySecondary,
+                tonalElevation = 0.dp
             ) {
                 items.forEach { item ->
                     NavigationBarItem(
@@ -52,13 +57,13 @@ fun ChildMainLayout(
                             }
                         },
                         icon = { Icon(item.icon, contentDescription = item.title) },
-                        label = { Text(item.title) },
+                        label = { Text(item.title, fontWeight = FontWeight.SemiBold) },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Navy900,
-                            selectedTextColor = Cyan400,
-                            indicatorColor = Cyan400,
-                            unselectedIconColor = TextSecondary,
-                            unselectedTextColor = TextSecondary
+                            selectedIconColor = ClayWhite,
+                            selectedTextColor = ClaySecondary,
+                            indicatorColor = ClaySecondary,
+                            unselectedIconColor = ClayTextBody,
+                            unselectedTextColor = ClayTextBody
                         )
                     )
                 }
@@ -68,8 +73,9 @@ fun ChildMainLayout(
             // SOS Alert Button
             FloatingActionButton(
                 onClick = onSendAlert,
-                containerColor = ErrorRed,
-                contentColor = TextPrimary
+                containerColor = ClayAccent,
+                contentColor = ClayWhite,
+                shape = CircleShape
             ) {
                 Icon(Icons.Default.Emergency, contentDescription = "Emergency SOS")
             }

@@ -43,11 +43,11 @@ class TgmcDataStore @Inject constructor(
     val blockedDomains: Flow<Set<String>> = dataStore.data.map { it[BLOCKED_DOMAINS] ?: emptySet() }
     val blockedKeywords: Flow<Set<String>> = dataStore.data.map { it[BLOCKED_KEYWORDS] ?: emptySet() }
     val schedules: Flow<String> = dataStore.data.map { it[SCHEDULES] ?: "[]" }
-    val accessToken: Flow<String?> = dataStore.data.map { 
+    val accessToken: Flow<String?> = dataStore.data.map {
         val raw = it[ACCESS_TOKEN]
         if (!raw.isNullOrEmpty()) com.tgm.tgmc.core.util.CryptoManager.decrypt(raw) else null
     }
-    val refreshToken: Flow<String?> = dataStore.data.map { 
+    val refreshToken: Flow<String?> = dataStore.data.map {
         val raw = it[REFRESH_TOKEN]
         if (!raw.isNullOrEmpty()) com.tgm.tgmc.core.util.CryptoManager.decrypt(raw) else null
     }

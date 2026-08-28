@@ -2,7 +2,9 @@ package com.tgm.tgmc.feature.parent.camera
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -12,6 +14,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -36,154 +40,240 @@ fun RemoteCameraScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Navy900,
-        topBar = {
-            TopAppBar(
-                title = { Text("Remote Camera Feed", color = TextPrimary, fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
-            )
-        }
-    ) { padding ->
-        Column(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ClayBackground)
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Live Video Feed Container
-            Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                color = Surface800,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (uiState.latestFrame != null) {
-                        Image(
-                            bitmap = uiState.latestFrame!!.asImageBitmap(),
-                            contentDescription = "Live Remote Frame",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
-                        )
+                .align(Alignment.TopEnd)
+                .offset(x = 60.dp, y = (-40).dp)
+                .size(200.dp)
+                .clay(
+                    backgroundColor = ClayBackground,
+                    cornerRadius = 100.dp,
+                    elevation = 20.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )
+        )
 
-                        // Streaming status overlay
-                        Surface(
-                            color = SuccessGreen.copy(alpha = 0.85f),
-                            shape = RoundedCornerShape(8.dp),
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                "Remote Camera Feed",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    color = ClayTextTitle,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            )
+                            Text(
+                                "Live camera streaming",
+                                style = MaterialTheme.typography.labelSmall.copy(color = ClayTextBody)
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(12.dp)
-                        ) {
-                            Text(
-                                "LIVE",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Navy900,
-                                    fontWeight = FontWeight.Bold
+                                .padding(start = 12.dp, end = 8.dp)
+                                .size(40.dp)
+                                .clay(
+                                    backgroundColor = ClayCard,
+                                    cornerRadius = 20.dp,
+                                    elevation = 6.dp,
+                                    lightShadowColor = ClayShadowLight,
+                                    darkShadowColor = ClayShadowDark
                                 )
-                            )
-                        }
-                    } else {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(24.dp)
+                                .clip(CircleShape)
+                                .clickable { onBack() },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = if (uiState.isStreaming) Icons.Default.Sync else Icons.Default.CameraAlt,
-                                contentDescription = null,
-                                tint = Cyan400,
-                                modifier = Modifier.size(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                if (uiState.isStreaming) "Connecting to device..." else "Camera Feed Idle",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    color = TextPrimary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                if (uiState.isStreaming) "Waiting for the child's device to transmit frame chunks."
-                                else "Start the camera capture below. A transparency indicator will show on the child's device.",
-                                style = MaterialTheme.typography.bodySmall.copy(color = TextMuted),
-                                textAlign = TextAlign.Center
-                            )
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = ClayTextTitle)
                         }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Control Buttons
-            if (uiState.error != null) {
-                Text(
-                    uiState.error!!,
-                    color = ErrorRed,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (!uiState.isStreaming) {
-                    Button(
-                        onClick = { viewModel.startCameraStream("rear") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Cyan400, contentColor = Navy900)
+                // Live Video Feed Container
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .clay(
+                            backgroundColor = ClayCard,
+                            cornerRadius = 28.dp,
+                            elevation = 14.dp,
+                            lightShadowColor = ClayShadowLight,
+                            darkShadowColor = ClayShadowDark
+                        )
+                        .clip(RoundedCornerShape(28.dp))
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.FlipCameraAndroid, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Rear Camera", fontWeight = FontWeight.Bold)
-                    }
+                        if (uiState.latestFrame != null) {
+                            Image(
+                                bitmap = uiState.latestFrame!!.asImageBitmap(),
+                                contentDescription = "Live Remote Frame",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
 
-                    Button(
-                        onClick = { viewModel.startCameraStream("front") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Cyan400, contentColor = Navy900)
-                    ) {
-                        Icon(Icons.Default.CameraFront, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Front Camera", fontWeight = FontWeight.Bold)
-                    }
-                } else {
-                    Button(
-                        onClick = { viewModel.stopCameraStream() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = ErrorRed, contentColor = TextPrimary)
-                    ) {
-                        Icon(Icons.Default.Stop, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Stop Streaming Feed", fontWeight = FontWeight.Bold)
+                            // Streaming status overlay
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(16.dp)
+                                    .clay(
+                                        backgroundColor = Color(0xFF10B981),
+                                        cornerRadius = 12.dp,
+                                        elevation = 6.dp
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    "LIVE FEED",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = ClayWhite,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                )
+                            }
+                        } else {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(28.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .insetClay(backgroundColor = ClayBackground, cornerRadius = 45.dp, elevation = 6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (uiState.isStreaming) Icons.Default.Sync else Icons.Default.CameraAlt,
+                                        contentDescription = null,
+                                        tint = ClayPrimary,
+                                        modifier = Modifier.size(44.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(20.dp))
+                                Text(
+                                    if (uiState.isStreaming) "Connecting to camera..." else "Camera Feed Idle",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        color = ClayTextTitle,
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    if (uiState.isStreaming) "Waiting for real-time video frames from child device."
+                                    else "Select Rear or Front camera below to request live stream.",
+                                    style = MaterialTheme.typography.bodySmall.copy(color = ClayTextBody),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                if (uiState.error != null) {
+                    Text(
+                        uiState.error!!,
+                        color = ClayAccent,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
+
+                // Control Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    if (!uiState.isStreaming) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clay(
+                                    backgroundColor = ClayPrimary,
+                                    cornerRadius = 20.dp,
+                                    elevation = 8.dp
+                                )
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable { viewModel.startCameraStream("rear") }
+                                .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.FlipCameraAndroid, contentDescription = null, tint = ClayWhite)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Rear Cam", fontWeight = FontWeight.Bold, color = ClayWhite)
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clay(
+                                    backgroundColor = ClaySecondary,
+                                    cornerRadius = 20.dp,
+                                    elevation = 8.dp
+                                )
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable { viewModel.startCameraStream("front") }
+                                .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CameraFront, contentDescription = null, tint = ClayWhite)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Front Cam", fontWeight = FontWeight.Bold, color = ClayWhite)
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clay(
+                                    backgroundColor = ClayAccent,
+                                    cornerRadius = 20.dp,
+                                    elevation = 10.dp
+                                )
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable { viewModel.stopCameraStream() }
+                                .padding(vertical = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Stop, contentDescription = null, tint = ClayWhite)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Stop Streaming Feed", fontWeight = FontWeight.Bold, color = ClayWhite)
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

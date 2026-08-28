@@ -66,7 +66,7 @@ object NetworkModule {
                             dataStore.saveAuthTokens(
                                 accessToken = newAuth.accessToken,
                                 refreshToken = newAuth.refreshToken,
-                                role = com.tgm.tgmc.core.domain.model.UserRole.valueOf(newAuth.role),
+                                role = newAuth.role,
                                 userId = newAuth.userId,
                                 email = newAuth.email
                             )
@@ -100,9 +100,9 @@ object NetworkModule {
             .addInterceptor(authInterceptor)
             .authenticator(authenticator)
             .addInterceptor(logging)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(90, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .writeTimeout(90, TimeUnit.SECONDS)
             .build()
     }
 

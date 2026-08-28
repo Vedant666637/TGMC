@@ -8,7 +8,7 @@ import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tgm.tgmc.core.data.remote.SocketManager
+import com.tgm.tgmc.core.data.remote.FirebaseManager
 import com.tgm.tgmc.core.domain.repository.DeviceRepository
 import com.tgm.tgmc.core.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,7 +28,7 @@ data class LiveAudioUiState(
 
 @HiltViewModel
 class LiveAudioViewModel @Inject constructor(
-    private val socketManager: SocketManager,
+    private val firebaseManager: FirebaseManager,
     private val deviceRepository: DeviceRepository
 ) : ViewModel() {
 
@@ -59,9 +59,9 @@ class LiveAudioViewModel @Inject constructor(
             }
         }
 
-        // Collect incoming audio chunks and write to AudioTrack
+        // Collect incoming audio chunks from Firebase and write to AudioTrack
         viewModelScope.launch(Dispatchers.IO) {
-            socketManager.audioChunk.collect { data ->
+            firebaseManager.audioChunk.collect { data ->
                 val chunkBase64 = data.optString("chunkBase64")
                 if (chunkBase64.isNotEmpty() && _uiState.value.isStreaming) {
                     try {
@@ -104,8 +104,8 @@ class LiveAudioViewModel @Inject constructor(
             audioTrack?.play()
             _uiState.update { it.copy(isStreaming = true, error = null) }
 
-            // Request child device to start recording
-            socketManager.requestAudio(targetId, "start")
+            // Request child device to start recording via Firebase
+            firebaseManager.requestAudio(targetId, "start")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize AudioTrack: ${e.message}")
             _uiState.update { it.copy(error = "Failed to open speaker output") }
@@ -116,7 +116,7 @@ class LiveAudioViewModel @Inject constructor(
         val targetId = _uiState.value.deviceId ?: return
         _uiState.update { it.copy(isStreaming = false) }
 
-        socketManager.requestAudio(targetId, "stop")
+        firebaseManager.requestAudio(targetId, "stop")
 
         try {
             audioTrack?.stop()

@@ -6,7 +6,7 @@ import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tgm.tgmc.core.data.remote.SocketManager
+import com.tgm.tgmc.core.data.remote.FirebaseManager
 import com.tgm.tgmc.core.domain.repository.DeviceRepository
 import com.tgm.tgmc.core.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +27,7 @@ data class RemoteCameraUiState(
 
 @HiltViewModel
 class RemoteCameraViewModel @Inject constructor(
-    private val socketManager: SocketManager,
+    private val firebaseManager: FirebaseManager,
     private val deviceRepository: DeviceRepository
 ) : ViewModel() {
 
@@ -49,9 +49,9 @@ class RemoteCameraViewModel @Inject constructor(
             }
         }
 
-        // Collect incoming frames
+        // Collect incoming frames from Firebase (via WebRTC signaling)
         viewModelScope.launch {
-            socketManager.cameraFrame.collect { data ->
+            firebaseManager.cameraFrame.collect { data ->
                 val frameBase64 = data.optString("frameBase64")
                 if (frameBase64.isNotEmpty()) {
                     try {
@@ -73,13 +73,13 @@ class RemoteCameraViewModel @Inject constructor(
         }
 
         _uiState.update { it.copy(isStreaming = true, selectedCamera = camera, latestFrame = null) }
-        socketManager.requestCamera(targetId, camera)
+        firebaseManager.requestCamera(targetId, camera)
     }
 
     fun stopCameraStream() {
         val targetId = _uiState.value.deviceId ?: return
         _uiState.update { it.copy(isStreaming = false, latestFrame = null) }
-        socketManager.requestCamera(targetId, "stop")
+        firebaseManager.requestCamera(targetId, "stop")
     }
 
     override fun onCleared() {

@@ -18,7 +18,12 @@ data class ForgotPasswordRequest(val email: String)
 data class RefreshRequest(val refreshToken: String)
 data class PairGenerateResponse(val code: String, val qrData: String, val expiresAt: Long)
 data class PairActivateRequest(val code: String, val deviceName: String, val deviceModel: String)
-data class PairActivateResponse(val deviceId: String, val parentEmail: String)
+data class PairActivateResponse(
+    val deviceId: String,
+    val parentEmail: String,
+    val accessToken: String? = null,
+    val refreshToken: String? = null
+)
 
 // ── Child API DTOs ──
 data class EducationalContent(

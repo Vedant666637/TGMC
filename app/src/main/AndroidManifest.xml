@@ -59,6 +59,7 @@
         android:theme="@style/Theme.TGMC"
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
 
         <!-- ─── Main Entry Activity ─── -->

@@ -2,13 +2,18 @@ package com.tgm.tgmc.feature.parent.presentation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -43,10 +48,12 @@ fun ParentMainLayout(
     )
 
     Scaffold(
+        containerColor = ClayBackground,
         bottomBar = {
             NavigationBar(
-                containerColor = Navy800,
-                contentColor = Cyan400
+                containerColor = ClayCard,
+                contentColor = ClayPrimary,
+                tonalElevation = 0.dp
             ) {
                 items.forEach { item ->
                     NavigationBarItem(
@@ -61,24 +68,25 @@ fun ParentMainLayout(
                             }
                         },
                         icon = { Icon(item.icon, contentDescription = item.title) },
-                        label = { Text(item.title) },
+                        label = { Text(item.title, fontWeight = FontWeight.SemiBold) },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Navy900,
-                            selectedTextColor = Cyan400,
-                            indicatorColor = Cyan400,
-                            unselectedIconColor = TextSecondary,
-                            unselectedTextColor = TextSecondary
+                            selectedIconColor = ClayWhite,
+                            selectedTextColor = ClayPrimary,
+                            indicatorColor = ClayPrimary,
+                            unselectedIconColor = ClayTextBody,
+                            unselectedTextColor = ClayTextBody
                         )
                     )
                 }
             }
         },
         floatingActionButton = {
-            // Shared SOS / Alert Button
+            // SOS / Alert Button with Clay elevation
             FloatingActionButton(
                 onClick = onSendAlert,
-                containerColor = ErrorRed,
-                contentColor = TextPrimary
+                containerColor = ClayAccent,
+                contentColor = ClayWhite,
+                shape = CircleShape
             ) {
                 Icon(Icons.Default.Warning, contentDescription = "Send Alert")
             }
@@ -114,7 +122,30 @@ fun ParentMainLayout(
 
 @Composable
 fun PlaceholderScreen(title: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-        Text(title, style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ClayBackground),
+        contentAlignment = androidx.compose.ui.Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .clay(
+                    backgroundColor = ClayCard,
+                    cornerRadius = 24.dp,
+                    elevation = 10.dp,
+                    lightShadowColor = ClayShadowLight,
+                    darkShadowColor = ClayShadowDark
+                )
+                .padding(horizontal = 32.dp, vertical = 20.dp)
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = ClayTextTitle,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
     }
 }
